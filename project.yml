@@ -50,18 +50,18 @@ targets:
     info:
       path: RepPilot/Resources/Info.plist
       properties:
-        CFBundleName: "Rep Pilot"
-        CFBundleDisplayName: "Rep Pilot"
+        CFBundleName: "REPILOT"
+        CFBundleDisplayName: "REPILOT"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIRequiresFullScreen: true
-        NSHealthShareUsageDescription: "Rep Pilot reads your workout data to sync activities from Apple Health and Apple Watch."
-        NSHealthUpdateUsageDescription: "Rep Pilot saves your workouts to Apple Health."
-        NSPhotoLibraryUsageDescription: "Rep Pilot accesses your photo library to attach activity photos."
-        NSCameraUsageDescription: "Rep Pilot uses your camera to capture activity photos."
+        NSHealthShareUsageDescription: "REPILOT reads your workout data to sync activities from Apple Health and Apple Watch."
+        NSHealthUpdateUsageDescription: "REPILOT saves your workouts to Apple Health."
+        NSPhotoLibraryUsageDescription: "REPILOT accesses your photo library to attach activity photos."
+        NSCameraUsageDescription: "REPILOT uses your camera to capture activity photos."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.repilot.rep-pilot

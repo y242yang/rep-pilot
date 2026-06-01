@@ -33,7 +33,7 @@ struct SettingsView: View {
                 } header: {
                     Text("AI Planning Key")
                 } footer: {
-                    Text("Your key is stored only on this device and sent directly to OpenAI. Rep Pilot never sees it.")
+                    Text("Your key is stored only on this device and sent directly to OpenAI. REPILOT never sees it.")
                 }
 
                 Section("Units") {

@@ -2,7 +2,7 @@ import Foundation
 
 enum WorkoutPromptBuilder {
     static func systemPrompt(profile: UserProfile? = nil) -> String {
-        var base = "You are Rep Pilot, a personal fitness coach. You analyze workout data and provide concise, motivating, and actionable coaching advice. Keep responses under 200 words. Be encouraging but realistic. Use plain text — no markdown headers or bullet symbols."
+        var base = "You are REPILOT, a personal fitness coach. You analyze workout data and provide concise, motivating, and actionable coaching advice. Keep responses under 200 words. Be encouraging but realistic. Use plain text — no markdown headers or bullet symbols."
         if let p = profile {
             var details: [String] = []
             if let age = p.age  { details.append("age \(age)") }

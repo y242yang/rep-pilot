@@ -53,7 +53,7 @@ struct LogTabView: View {
                             .scaledToFit()
                             .frame(width: 28, height: 28)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
-                        Text("Rep Pilot")
+                        Text("REPILOT")
                             .font(.headline.bold())
                     }
                 }

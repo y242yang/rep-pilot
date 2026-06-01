@@ -46,7 +46,7 @@ struct OnboardingView: View {
         ScrollView {
             VStack(spacing: 32) {
                 VStack(spacing: 8) {
-                    Text("Welcome to Rep Pilot")
+                    Text("Welcome to REPILOT")
                         .font(.largeTitle.bold())
                     Text("Let's set up your profile for personalised coaching.")
                         .font(.subheadline)
