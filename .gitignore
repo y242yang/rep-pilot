@@ -47,8 +47,17 @@ fastlane/test_output
 *.p8
 AuthKey_*.p8
 GoogleService-Info.plist
+*.mobileprovision
+*.xcconfig
 
 # Build artifacts
 build/
 *.o
 *.d
+
+# Editor
+*.swp
+*.swo
+
+# Swift Playgrounds
+playground.xcworkspace/

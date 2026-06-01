@@ -104,7 +104,7 @@
 		660B659DD925E9828A254A71 /* DayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailView.swift; sourceTree = "<group>"; };
 		677D7C8B4835B74927752EA4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6AFAC3130273B9B051AE43E9 /* HealthTrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthTrendsView.swift; sourceTree = "<group>"; };
-		6BEB8C7D08FAEC056F459F60 /* RepPilot.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RepPilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6BEB8C7D08FAEC056F459F60 /* RepPilot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RepPilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D80783E0F7A5538AD10684C /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
 		738C0F7D4F606772313064EF /* ActivityTypeMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityTypeMapper.swift; sourceTree = "<group>"; };
 		74F994C86E9315164CE98DFC /* AppMigrationPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMigrationPlan.swift; sourceTree = "<group>"; };
@@ -414,14 +414,14 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					329CFD67CAF468B73CC9F7DA = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = Y2HHD36TDG;
 					};
 					4074502A8C20A7048CE7C35D = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = Y2HHD36TDG;
 						TestTargetID = A372DEF3F114A5652278C7FE;
 					};
 					A372DEF3F114A5652278C7FE = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = Y2HHD36TDG;
 					};
 				};
 			};
@@ -555,6 +555,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RepPilot/RepPilot.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = RepPilot/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -620,7 +621,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y2HHD36TDG;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -703,7 +704,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = Y2HHD36TDG;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -731,7 +732,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RepPilot/RepPilot.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Distribution: Yiming Yang (Y2HHD36TDG)";
+				CODE_SIGN_STYLE = Manual;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Y2HHD36TDG;
 				INFOPLIST_FILE = RepPilot/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -739,6 +742,8 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.repilot.rep-pilot";
+				PROVISIONING_PROFILE_SPECIFIER = "Rep Pilot App Store";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Rep Pilot App Store";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
