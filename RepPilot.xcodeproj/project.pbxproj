@@ -420,9 +420,6 @@
 						DevelopmentTeam = Y2HHD36TDG;
 						TestTargetID = A372DEF3F114A5652278C7FE;
 					};
-					A372DEF3F114A5652278C7FE = {
-						DevelopmentTeam = Y2HHD36TDG;
-					};
 				};
 			};
 			buildConfigurationList = 025B2CEB745A2D88F277D6AD /* Build configuration list for PBXProject "RepPilot" */;
@@ -554,8 +551,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RepPilot/RepPilot.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Y2HHD36TDG;
 				INFOPLIST_FILE = RepPilot/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -563,6 +563,8 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.repilot.rep-pilot";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Rep Pilot App Store";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -734,7 +736,6 @@
 				CODE_SIGN_ENTITLEMENTS = RepPilot/RepPilot.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution: Yiming Yang (Y2HHD36TDG)";
 				CODE_SIGN_STYLE = Manual;
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Y2HHD36TDG;
 				INFOPLIST_FILE = RepPilot/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -743,7 +744,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.repilot.rep-pilot";
 				PROVISIONING_PROFILE_SPECIFIER = "Rep Pilot App Store";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Rep Pilot App Store";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

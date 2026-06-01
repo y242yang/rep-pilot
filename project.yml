@@ -69,6 +69,7 @@ targets:
       configs:
         Debug:
           CODE_SIGN_STYLE: Automatic
+          CODE_SIGN_IDENTITY: "Apple Development"
         Release:
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: "Apple Distribution: Yiming Yang (Y2HHD36TDG)"
