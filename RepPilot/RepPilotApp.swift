@@ -1,0 +1,30 @@
+import SwiftUI
+import SwiftData
+
+@main
+struct RepPilotApp: App {
+    @StateObject private var settings = AppSettings.shared
+    @StateObject private var healthKit = HealthKitService.shared
+
+    private let container: ModelContainer = {
+        do {
+            let schema = Schema(versionedSchema: SchemaV1.self)
+            return try ModelContainer(
+                for: schema,
+                migrationPlan: AppMigrationPlan.self
+            )
+        } catch {
+            fatalError("SwiftData container failed: \(error)")
+        }
+    }()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(settings)
+                .environmentObject(healthKit)
+                .preferredColorScheme(.dark)
+        }
+        .modelContainer(container)
+    }
+}

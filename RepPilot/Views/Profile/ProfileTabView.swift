@@ -1,0 +1,142 @@
+import SwiftUI
+import SwiftData
+import PhotosUI
+
+struct ProfileTabView: View {
+    @Query private var profiles: [UserProfile]
+    @Environment(\.modelContext) private var context
+
+    @State private var isEditing = false
+    @State private var showSettings = false
+
+    private var profile: UserProfile? { profiles.first }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if let profile {
+                    profileContent(profile)
+                } else {
+                    Text("No profile found.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Profile").font(.headline.bold())
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showSettings = true } label: {
+                        Image(systemName: "gearshape")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(isEditing ? "Done" : "Edit") {
+                        isEditing.toggle()
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) { SettingsView() }
+            .sheet(isPresented: $isEditing) {
+                if let profile { EditProfileView(profile: profile) }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func profileContent(_ profile: UserProfile) -> some View {
+        List {
+            // Header
+            Section {
+                HStack(spacing: 16) {
+                    ProfilePhotoView(photoPath: profile.photoPath, size: 72)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(profile.name.isEmpty ? "Your Profile" : profile.name)
+                            .font(.title3.bold())
+                        Text(profile.gender.rawValue)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+
+            // Stats
+            Section("Body Stats") {
+                LabeledContent("Units", value: profile.measurementSystem.isMetric ? "Metric" : "Imperial")
+                if let dob = profile.dateOfBirth {
+                    LabeledContent("Date of Birth", value: dob.formatted(.dateTime.day().month(.wide).year()))
+                }
+                LabeledContent("Age", value: profile.age.map { "\($0) yrs" } ?? "—")
+                LabeledContent("Weight", value: profile.weightKg > 0 ? profile.weightKg.weightFormatted(metric: profile.isMetric) : "—")
+                LabeledContent("Height", value: profile.heightCm > 0 ? profile.heightCm.heightFormatted(metric: profile.isMetric) : "—")
+                if let bmi = profile.bmi {
+                    LabeledContent("BMI", value: String(format: "%.1f", bmi))
+                }
+            }
+
+            // Primary activities
+            Section("Primary Activities") {
+                if profile.primaryActivityNames.isEmpty {
+                    Text("None selected").foregroundStyle(.secondary)
+                } else {
+                    ForEach(profile.primaryActivityNames.sorted(), id: \.self) { name in
+                        let p = ActivityTypeMapper.profile(for: name)
+                        HStack {
+                            Text(name)
+                            Spacer()
+                            ScorePills(cardio: p.cardio, strength: p.strength, mobility: p.mobility)
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+    }
+}
+
+// MARK: - Profile photo helper
+
+struct ProfilePhotoView: View {
+    let photoPath: String?
+    let size: CGFloat
+
+    var body: some View {
+        Group {
+            if let path = photoPath,
+               let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+               let data = try? Data(contentsOf: dir.appendingPathComponent(path)),
+               let ui = UIImage(data: data) {
+                Image(uiImage: ui)
+                    .resizable().scaledToFill()
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+    }
+}
+
+// MARK: - Inline score pills
+
+private struct ScorePills: View {
+    let cardio: Int; let strength: Int; let mobility: Int
+    var body: some View {
+        HStack(spacing: 4) {
+            pill("\(cardio)%", .blue)
+            pill("\(strength)%", .orange)
+            pill("\(mobility)%", .green)
+        }
+    }
+    private func pill(_ text: String, _ color: Color) -> some View {
+        Text(text)
+            .font(.caption2.bold())
+            .padding(.horizontal, 5).padding(.vertical, 2)
+            .background(color.opacity(0.15), in: Capsule())
+            .foregroundStyle(color)
+    }
+}
