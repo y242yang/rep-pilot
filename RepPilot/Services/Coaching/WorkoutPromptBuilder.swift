@@ -72,7 +72,7 @@ enum WorkoutPromptBuilder {
             return parts.joined(separator: " · ")
 
         case .resistance:
-            guard let w = session.workoutData else { return "\(dateStr): Resistance" }
+            guard session.workoutData != nil else { return "\(dateStr): Resistance" }
             let names = session.exerciseLogs.map(\.exerciseName).joined(separator: ", ")
             let totalSets = session.exerciseLogs.reduce(0) { $0 + $1.totalSets }
             let totalVol  = session.exerciseLogs.reduce(0.0) { $0 + $1.totalVolume }

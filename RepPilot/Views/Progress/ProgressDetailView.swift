@@ -109,7 +109,6 @@ struct ProgressDetailView: View {
     }
 
     private var cardioRecordsRow: some View {
-        let unit = isMetric ? "km" : "mi"
         let paceUnit = isMetric ? "/km" : "/mi"
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
