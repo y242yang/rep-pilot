@@ -154,22 +154,67 @@ struct PlanningTabView: View {
     }
 
     private var missingKeyCard: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "key.fill")
-                .font(.system(size: 40)).foregroundStyle(.orange)
-            Text("OpenAI key required")
-                .font(.title3.bold())
-            Text("Add your OpenAI API key in Settings to enable AI planning.")
-                .font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(spacing: 12) {
+                Image(systemName: "key.fill")
+                    .font(.title2).foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("OpenAI key required")
+                        .font(.headline)
+                    Text("AI Planning uses GPT-4o. You supply your own key — it costs less than $0.01 per analysis.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+
+            Divider()
+
+            Text("How to get your key:")
+                .font(.subheadline.bold())
+
+            VStack(alignment: .leading, spacing: 8) {
+                keyStep("1", "Go to platform.openai.com and create a free account")
+                keyStep("2", "Click your profile → \"API keys\" → \"Create new secret key\"")
+                keyStep("3", "Copy the key (starts with sk-…)")
+                keyStep("4", "Add $5 credit under Billing — plenty for months of use")
+                keyStep("5", "Paste it in Settings below")
+            }
+
+            Link(destination: URL(string: "https://platform.openai.com/api-keys")!) {
+                Label("platform.openai.com/api-keys  ↗", systemImage: "globe")
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                    .foregroundStyle(.blue)
+            }
+
             NavigationLink(destination: SettingsView()) {
-                Label("Open Settings", systemImage: "gearshape")
+                Label("Open Settings to paste key", systemImage: "gearshape")
                     .font(.subheadline.bold())
-                    .padding(.horizontal, 20).padding(.vertical, 10)
-                    .background(Color.orange.opacity(0.15), in: Capsule())
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
                     .foregroundStyle(.orange)
             }
         }
-        .padding(.top, 40)
+        .padding()
+        .background(.background, in: RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.06), radius: 6, y: 2)
+        .padding(.top, 8)
+    }
+
+    private func keyStep(_ number: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(number)
+                .font(.caption.bold())
+                .foregroundStyle(.white)
+                .frame(width: 18, height: 18)
+                .background(Color.orange, in: Circle())
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     // MARK: - Generate
