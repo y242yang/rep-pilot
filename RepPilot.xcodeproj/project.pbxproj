@@ -93,7 +93,7 @@
 		2A214BC9F45DD16365D77A02 /* PlanningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningService.swift; sourceTree = "<group>"; };
 		333EE99ED647BB459C886AD7 /* DatabaseSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseSeeder.swift; sourceTree = "<group>"; };
 		346B0DEE80C8AECC00D3BF7A /* RepPilotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepPilotApp.swift; sourceTree = "<group>"; };
-		3B4BEFAC4DDDA76C682CC7CC /* RepPilotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepPilotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3B4BEFAC4DDDA76C682CC7CC /* RepPilotTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RepPilotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		413ECC7DE69CD225C2E4981E /* ActivityProgressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityProgressCard.swift; sourceTree = "<group>"; };
 		444E6D6C859D79070284C6AC /* ActivityProgressDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityProgressDetailView.swift; sourceTree = "<group>"; };
 		4560E8B96DE6038F7DE3BBCF /* PlanningTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanningTabView.swift; sourceTree = "<group>"; };
@@ -104,7 +104,7 @@
 		660B659DD925E9828A254A71 /* DayDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayDetailView.swift; sourceTree = "<group>"; };
 		677D7C8B4835B74927752EA4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6AFAC3130273B9B051AE43E9 /* HealthTrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthTrendsView.swift; sourceTree = "<group>"; };
-		6BEB8C7D08FAEC056F459F60 /* RepPilot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RepPilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6BEB8C7D08FAEC056F459F60 /* RepPilot.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RepPilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6D80783E0F7A5538AD10684C /* ProgressViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressViewModel.swift; sourceTree = "<group>"; };
 		738C0F7D4F606772313064EF /* ActivityTypeMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityTypeMapper.swift; sourceTree = "<group>"; };
 		74F994C86E9315164CE98DFC /* AppMigrationPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMigrationPlan.swift; sourceTree = "<group>"; };
@@ -127,7 +127,7 @@
 		BF857581D58A037DA8CAFF89 /* RepPilot.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RepPilot.entitlements; sourceTree = "<group>"; };
 		C366F4D6C2B3114B10B9762E /* WeightExerciseTypeLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightExerciseTypeLog.swift; sourceTree = "<group>"; };
 		D049CCB640B13A755D9F20B2 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
-		D04AA48A0D6D33CA0C5DBC07 /* RepPilotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RepPilotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D04AA48A0D6D33CA0C5DBC07 /* RepPilotUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RepPilotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D15421579A1E1457FDA93463 /* ExerciseLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLibrary.swift; sourceTree = "<group>"; };
 		D2A7114E11A5992B50ECC226 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D4364B32DDB4107046A501A6 /* Enums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enums.swift; sourceTree = "<group>"; };
@@ -411,7 +411,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2650;
+				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					329CFD67CAF468B73CC9F7DA = {
 						DevelopmentTeam = Y2HHD36TDG;
@@ -419,6 +419,9 @@
 					4074502A8C20A7048CE7C35D = {
 						DevelopmentTeam = Y2HHD36TDG;
 						TestTargetID = A372DEF3F114A5652278C7FE;
+					};
+					A372DEF3F114A5652278C7FE = {
+						DevelopmentTeam = Y2HHD36TDG;
 					};
 				};
 			};
@@ -552,10 +555,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RepPilot/RepPilot.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = Y2HHD36TDG;
+				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = RepPilot/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -563,10 +563,8 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.repilot.rep-pilot";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Rep Pilot App Store";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -591,7 +589,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -627,7 +624,6 @@
 				DEVELOPMENT_TEAM = Y2HHD36TDG;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -649,7 +645,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
@@ -677,7 +672,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -713,7 +707,6 @@
 				DEVELOPMENT_TEAM = Y2HHD36TDG;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -728,7 +721,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -751,7 +743,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.repilot.rep-pilot";
 				PROVISIONING_PROFILE_SPECIFIER = "Rep Pilot App Store";
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

@@ -50,17 +50,13 @@ final class HealthKitService: ObservableObject {
             store.execute(query)
         }
 
-        // Enrich each workout with HR and pace in parallel
-        return try await withThrowingTaskGroup(of: WorkoutSession?.self) { group in
-            for workout in workouts {
-                group.addTask { try await self.convert(workout: workout, context: context) }
+        var sessions: [WorkoutSession] = []
+        for workout in workouts {
+            if let session = try await convert(workout: workout, context: context) {
+                sessions.append(session)
             }
-            var sessions: [WorkoutSession] = []
-            for try await session in group {
-                if let s = session { sessions.append(s) }
-            }
-            return sessions.sorted { $0.date > $1.date }
         }
+        return sessions.sorted { $0.date > $1.date }
     }
 
     // MARK: - Convert + enrich
