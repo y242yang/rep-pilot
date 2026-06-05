@@ -135,21 +135,16 @@ struct OfflineCoachingView: View {
     // MARK: - Balance card
 
     private var balanceCard: some View {
-        let cardio    = filtered.filter { $0.workoutType == .cardio }.count
-        let strength  = filtered.filter { $0.workoutType == .resistance }.count
-        let mobility  = filtered.filter { $0.workoutType == .mobility }.count
-        let others    = filtered.filter { $0.workoutType == .others }.count
-        let total     = Double(filtered.count)
+        let tc = filtered.reduce(0) { $0 + $1.cardioScore }
+        let ts = filtered.reduce(0) { $0 + $1.strengthScore }
+        let tm = filtered.reduce(0) { $0 + $1.mobilityScore }
+        let total = Double(tc + ts + tm)
 
         return VStack(alignment: .leading, spacing: 14) {
             Text("Training Balance").font(.headline)
-
-            balanceRow("Cardio",    count: cardio,   total: total, color: .red)
-            balanceRow("Strength",  count: strength, total: total, color: .blue)
-            balanceRow("Mobility",  count: mobility, total: total, color: .teal)
-            if others > 0 {
-                balanceRow("Other", count: others,   total: total, color: .gray)
-            }
+            balanceRow("Cardio",   score: tc, total: total, color: .red)
+            balanceRow("Strength", score: ts, total: total, color: .blue)
+            balanceRow("Mobility", score: tm, total: total, color: .teal)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -157,13 +152,13 @@ struct OfflineCoachingView: View {
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
     }
 
-    private func balanceRow(_ label: String, count: Int, total: Double, color: Color) -> some View {
-        let pct = total > 0 ? Double(count) / total : 0
+    private func balanceRow(_ label: String, score: Int, total: Double, color: Color) -> some View {
+        let pct = total > 0 ? Double(score) / total : 0
         return VStack(spacing: 4) {
             HStack {
                 Text(label).font(.subheadline)
                 Spacer()
-                Text("\(count)  ·  \(Int(pct * 100))%")
+                Text("\(Int(pct * 100))%")
                     .font(.subheadline.bold())
                     .foregroundStyle(color)
             }
@@ -200,20 +195,26 @@ struct OfflineCoachingView: View {
     private func buildSuggestions() -> [Suggestion] {
         let weeks     = max(1.0, endDate.timeIntervalSince(startDate) / (7 * 86400))
         let perWeek   = Double(filtered.count) / weeks
-        let cardio    = filtered.filter { $0.workoutType == .cardio }.count
         let strength  = filtered.filter { $0.workoutType == .resistance }.count
-        let mobility  = filtered.filter { $0.workoutType == .mobility }.count
         let total     = Double(filtered.count)
-        let cardioP   = total > 0 ? Double(cardio)   / total : 0
-        let strengthP = total > 0 ? Double(strength) / total : 0
-        let mobilityP = total > 0 ? Double(mobility) / total : 0
+        let tc        = filtered.reduce(0) { $0 + $1.cardioScore }
+        let ts        = filtered.reduce(0) { $0 + $1.strengthScore }
+        let tm        = filtered.reduce(0) { $0 + $1.mobilityScore }
+        let scoreTotal = Double(tc + ts + tm)
+        let cardioP   = scoreTotal > 0 ? Double(tc) / scoreTotal : 0
+        let strengthP = scoreTotal > 0 ? Double(ts) / scoreTotal : 0
+        let mobilityP = scoreTotal > 0 ? Double(tm) / scoreTotal : 0
 
         var result: [Suggestion] = []
 
-        // Frequency check (applies to all goals)
+        // Universal checks (apply to all goals)
         if perWeek < 2 {
             result.append(.init(icon: "exclamationmark.triangle.fill", color: .red,
                 text: "Only \(String(format: "%.1f", perWeek)) sessions/week — most goals require at least 3 to see progress."))
+        }
+        if strengthP < 0.1 && total >= 5 {
+            result.append(.init(icon: "dumbbell.fill", color: .blue,
+                text: "Strength is only \(Int(strengthP * 100))% of your training. Even 1–2 sessions per week preserves muscle mass and supports long-term health."))
         }
 
         switch goal {
