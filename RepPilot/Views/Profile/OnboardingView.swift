@@ -17,7 +17,7 @@ struct OnboardingView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var photoData: Data?
     @State private var photoImage: Image?
-    @State private var step: Int = 0
+    @State private var step: Int = 0   // 0 = basic info, 1 = HealthKit, 2 = activities
 
     private var canAdvanceFromStep0: Bool {
         let hasWeight = (Double(weightInput) ?? 0) > 0
@@ -32,6 +32,8 @@ struct OnboardingView: View {
             Group {
                 if step == 0 {
                     basicInfoStep
+                } else if step == 1 {
+                    healthKitStep
                 } else {
                     activityStep
                 }
@@ -136,7 +138,87 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 1: Primary activities
+    // MARK: - Step 1: HealthKit disclosure
+
+    private var healthKitStep: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 28) {
+                    VStack(spacing: 12) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 56))
+                            .foregroundStyle(.red)
+                            .padding(.top, 32)
+                        Text("Apple Health")
+                            .font(.title2.bold())
+                        Text("Repilot connects to Apple Health to import your workout history automatically.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.horizontal)
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("What Repilot reads from Health:")
+                            .font(.subheadline.bold())
+                        healthKitRow(icon: "figure.run", label: "Workouts", detail: "Type, duration, and date of your activities")
+                        healthKitRow(icon: "heart.circle", label: "Heart Rate", detail: "Min, average, and max BPM per session")
+                        healthKitRow(icon: "flame.fill",   label: "Active Calories", detail: "Energy burned during workouts")
+                        healthKitRow(icon: "map",           label: "Distance & Route", detail: "Distance covered and GPS route data")
+                    }
+                    .padding()
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal)
+
+                    Text("This data is stored only on your device and is never shared with anyone.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                        .padding(.bottom, 16)
+                }
+            }
+
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    Button { withAnimation { step = 0 } } label: {
+                        Text("Back")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.secondary.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    Button { withAnimation { step = 2 } } label: {
+                        Text("Next")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+        }
+    }
+
+    private func healthKitRow(icon: String, label: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(.red)
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.subheadline.bold())
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    // MARK: - Step 2: Primary activities
 
     private var activityStep: some View {
         VStack(spacing: 0) {
@@ -180,7 +262,7 @@ struct OnboardingView: View {
                         .foregroundStyle(.secondary)
                 }
                 HStack(spacing: 12) {
-                    Button { withAnimation { step = 0 } } label: {
+                    Button { withAnimation { step = 1 } } label: {
                         Text("Back")
                             .font(.headline)
                             .frame(maxWidth: .infinity)

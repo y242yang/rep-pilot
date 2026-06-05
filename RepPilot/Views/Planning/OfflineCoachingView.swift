@@ -10,8 +10,6 @@ struct OfflineCoachingView: View {
     @AppStorage("coachingGoal") private var goalRaw: String = FitnessGoal.generalFitness.rawValue
     @State private var startDate: Date = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
     @State private var endDate: Date = Date()
-    @State private var showStartPicker = false
-    @State private var showEndPicker   = false
 
     private var goal: FitnessGoal { FitnessGoal(rawValue: goalRaw) ?? .generalFitness }
 
@@ -62,55 +60,23 @@ struct OfflineCoachingView: View {
 
     private var dateRangeSection: some View {
         HStack(spacing: 12) {
-            dateButton("From", date: startDate, isShowing: $showStartPicker)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("From").font(.caption2).foregroundStyle(.secondary)
+                DatePicker("", selection: $startDate, in: ...endDate, displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+            }
             Image(systemName: "arrow.right").foregroundStyle(.secondary)
-            dateButton("To", date: endDate, isShowing: $showEndPicker)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("To").font(.caption2).foregroundStyle(.secondary)
+                DatePicker("", selection: $endDate, in: startDate...Date(), displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+            }
         }
         .padding()
         .background(.background, in: RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
-        .overlay(alignment: .bottom) {
-            if showStartPicker {
-                DatePicker("", selection: $startDate, in: ...endDate, displayedComponents: .date)
-                    .datePickerStyle(.graphical)
-                    .padding(.horizontal)
-                    .background(.background, in: RoundedRectangle(cornerRadius: 14))
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-                    .offset(y: 8)
-                    .zIndex(1)
-            } else if showEndPicker {
-                DatePicker("", selection: $endDate, in: startDate...Date(), displayedComponents: .date)
-                    .datePickerStyle(.graphical)
-                    .padding(.horizontal)
-                    .background(.background, in: RoundedRectangle(cornerRadius: 14))
-                    .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-                    .offset(y: 8)
-                    .zIndex(1)
-            }
-        }
-        .zIndex(showStartPicker || showEndPicker ? 10 : 0)
-        .onTapGesture(count: 99) {}
-    }
-
-    private func dateButton(_ label: String, date: Date, isShowing: Binding<Bool>) -> some View {
-        Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                if isShowing.wrappedValue {
-                    isShowing.wrappedValue = false
-                } else {
-                    showStartPicker = false
-                    showEndPicker = false
-                    isShowing.wrappedValue = true
-                }
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label).font(.caption2).foregroundStyle(.secondary)
-                Text(date.shortFormatted).font(.subheadline.bold())
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Stats grid
