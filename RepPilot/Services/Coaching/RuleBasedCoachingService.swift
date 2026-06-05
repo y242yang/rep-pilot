@@ -1,8 +1,6 @@
 import Foundation
 
 final class RuleBasedCoachingService: CoachingService {
-    let provider: CoachingProvider = .ruleBased
-
     func generateWeeklyReport(
         sessions: [WorkoutSession],
         week: DateInterval

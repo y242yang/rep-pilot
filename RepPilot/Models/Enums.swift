@@ -64,13 +64,6 @@ enum Gender: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 }
 
-enum CoachingProvider: String, CaseIterable, Codable, Identifiable {
-    case ruleBased = "Rule-Based (Offline)"
-    case openAI = "OpenAI"
-    case claude = "Claude"
-    var id: String { rawValue }
-}
-
 // Value types stored as JSON in SwiftData models
 
 struct PlannedDay: Codable, Identifiable, Hashable {

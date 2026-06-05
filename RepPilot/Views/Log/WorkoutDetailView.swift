@@ -149,8 +149,7 @@ struct WorkoutDetailView: View {
                     HStack {
                         Text("Set").frame(width: 32, alignment: .leading)
                         Text("Reps").frame(maxWidth: .infinity, alignment: .center)
-                        Text(isMetric ? "kg" : "lbs").frame(maxWidth: .infinity, alignment: .center)
-                        Text("Vol").frame(maxWidth: .infinity, alignment: .trailing)
+                        Text(isMetric ? "kg" : "lbs").frame(maxWidth: .infinity, alignment: .trailing)
                     }
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
@@ -166,36 +165,18 @@ struct WorkoutDetailView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                             if set.isBodyweight {
                                 Text("BW")
-                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                                     .foregroundStyle(.secondary)
                             } else {
                                 let display = isMetric ? set.weightKg : set.weightKg.kgToLbs
                                 Text(String(format: "%.1f", display))
-                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
                             }
-                            let vol = set.isBodyweight ? 0.0 : set.weightKg * Double(set.reps)
-                            let volDisplay = isMetric ? vol : vol.kgToLbs
-                            Text(String(format: "%.0f", volDisplay))
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                                .foregroundStyle(.secondary)
                         }
                         .font(.subheadline.monospacedDigit())
                     }
 
-                    // Totals row
-                    if let orm = log.estimatedOneRM {
-                        let display = isMetric ? orm : orm.kgToLbs
-                        HStack {
-                            Text("Est. 1RM")
-                                .font(.caption.bold())
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(String(format: "%.1f %@", display, isMetric ? "kg" : "lbs"))
-                                .font(.caption.bold())
-                                .foregroundStyle(.orange)
-                        }
-                        .padding(.top, 2)
-                    }
+
                 }
                 .padding(12)
                 .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))

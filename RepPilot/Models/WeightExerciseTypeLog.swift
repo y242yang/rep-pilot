@@ -20,21 +20,6 @@ final class WeightExerciseTypeLog {
     var totalSets: Int { sets.count }
     var totalReps: Int { sets.reduce(0) { $0 + $1.reps } }
 
-    var totalVolume: Double {
-        sets.reduce(0.0) { $0 + $1.weightKg * Double($1.reps) }
-    }
-
-    var estimatedOneRM: Double? {
-        sets.compactMap { set -> Double? in
-            guard !set.isBodyweight, set.weightKg > 0, set.reps > 0 else { return nil }
-            return set.weightKg * (1 + Double(set.reps) / 30)
-        }.max()
-    }
-
-    var maxWeightKg: Double? {
-        sets.filter { !$0.isBodyweight }.map(\.weightKg).max()
-    }
-
     init(exerciseType: WeightExerciseType?, date: Date) {
         self.exerciseType = exerciseType
         self.date = date

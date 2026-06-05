@@ -25,8 +25,8 @@ struct ContentView: View {
             ProgressTabView()
                 .tabItem { Label("Progress", systemImage: "chart.line.uptrend.xyaxis") }
 
-            PlanningTabView()
-                .tabItem { Label("Planning", systemImage: "brain.head.profile") }
+            CoachingTabView()
+                .tabItem { Label("Coaching", systemImage: "brain.head.profile") }
 
             ProfileTabView()
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }

@@ -49,6 +49,7 @@ struct CalendarTabView: View {
                 upcomingList
             }
             .navigationTitle("Calendar")
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showDayDetail) {
                 if let date = selectedDate {
                     DayDetailView(date: date, sessions: sessionsOnDay(date))

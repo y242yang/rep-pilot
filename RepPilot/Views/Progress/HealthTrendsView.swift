@@ -37,10 +37,7 @@ struct HealthTrendsView: View {
                 if !hrEfficiencyData.isEmpty {
                     hrEfficiencyChart.padding(.horizontal)
                 }
-                if !strengthLineData.isEmpty {
-                    strengthLineChart.padding(.horizontal)
-                }
-                if bodyWeightData.isEmpty && hrEfficiencyData.isEmpty && strengthLineData.isEmpty {
+                if bodyWeightData.isEmpty && hrEfficiencyData.isEmpty {
                     emptyState.padding()
                 }
             }
@@ -95,44 +92,6 @@ struct HealthTrendsView: View {
             }
             .chartYScale(domain: .automatic(includesZero: false))
             .frame(height: 160)
-        }
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
-    }
-
-    // MARK: - Strength volume line chart (one point per session)
-
-    private var strengthLineData: [(Date, Double)] {
-        allSessions
-            .filter { !$0.exerciseLogs.isEmpty }
-            .sorted { $0.date < $1.date }
-            .compactMap { session -> (Date, Double)? in
-                let vol = session.exerciseLogs.reduce(0.0) { $0 + $1.totalVolume }
-                guard vol > 0 else { return nil }
-                let display = isMetric ? vol : vol * 2.20462
-                return (session.date, display)
-            }
-    }
-
-    private var strengthLineChart: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Strength Volume (\(weightUnit) per session)").font(.headline)
-                Text("Total weight lifted across all exercises").font(.caption).foregroundStyle(.secondary)
-            }
-            Chart(strengthLineData, id: \.0) { date, vol in
-                LineMark(x: .value("Date", date), y: .value("Volume", vol))
-                    .foregroundStyle(Color.orange.gradient)
-                    .interpolationMethod(.catmullRom)
-                PointMark(x: .value("Date", date), y: .value("Volume", vol))
-                    .foregroundStyle(Color.orange)
-                    .symbolSize(40)
-                AreaMark(x: .value("Date", date), y: .value("Volume", vol))
-                    .foregroundStyle(Color.orange.opacity(0.08))
-            }
-            .chartYScale(domain: .automatic(includesZero: false))
-            .frame(height: 180)
         }
         .padding()
         .background(.background, in: RoundedRectangle(cornerRadius: 14))

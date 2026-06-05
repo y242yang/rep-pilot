@@ -20,6 +20,10 @@ struct ProgressDetailView: View {
             .sorted { $0.date < $1.date }
     }
 
+    private var allFilteredSessions: [WorkoutSession] {
+        allSessions.filter { !$0.isPlanned && $0.date >= since }.sorted { $0.date < $1.date }
+    }
+
     private var isWeightTraining: Bool { selectedActivity == "Weight Training" }
 
     private var exerciseNames: [String] {
@@ -36,13 +40,11 @@ struct ProgressDetailView: View {
                 filterSection.padding(.horizontal)
 
                 if selectedActivity.isEmpty {
-                    emptyPrompt("Select an activity above to see your progression.")
+                    overallTrendsSection.padding(.horizontal)
                 } else if filteredSessions.isEmpty {
                     emptyPrompt("No \(selectedActivity) sessions since \(since.shortFormatted).")
-                } else if isWeightTraining {
-                    strengthSection.padding(.horizontal)
                 } else {
-                    cardioSection.padding(.horizontal)
+                    activitySection.padding(.horizontal)
                 }
             }
             .padding(.vertical)
@@ -88,16 +90,123 @@ struct ProgressDetailView: View {
         .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
     }
 
-    // MARK: - Cardio section
+    // MARK: - Overall trends
 
-    private var cardioSection: some View {
-        VStack(spacing: 16) {
-            cardioRecordsRow
-            if filteredSessions.contains(where: { $0.workoutData?.avgPaceSecondsPerKm != nil }) {
-                paceChart
+    private var overallTrendsSection: some View {
+        let hasDuration = allFilteredSessions.contains { ($0.workoutData?.durationSeconds ?? 0) > 0 }
+        let hasDistance = allFilteredSessions.contains { ($0.workoutData?.distanceMeters ?? 0) > 0 }
+        let hasHR       = allFilteredSessions.contains { $0.workoutData?.avgHeartRate != nil }
+        let hasPace     = allFilteredSessions.contains { $0.workoutData?.avgPaceSecondsPerKm != nil }
+
+        return Group {
+            if hasDuration || hasDistance || hasHR || hasPace {
+                VStack(spacing: 16) {
+                    if hasDuration { overallDurationChart }
+                    if hasDistance { overallDistanceChart }
+                    if hasHR       { overallHRChart }
+                    if hasPace     { overallPaceChart }
+                }
             }
+        }
+    }
+
+    private var overallDurationChart: some View {
+        let data = allFilteredSessions.compactMap { s -> (Date, Double)? in
+            guard let d = s.workoutData?.durationSeconds, d > 0 else { return nil }
+            return (s.date, d / 60)
+        }
+        return chartCard("Duration (min)", nil) {
+            Chart(data, id: \.0) { date, mins in
+                BarMark(x: .value("Date", date), y: .value("Min", mins))
+                    .foregroundStyle(Color.blue.gradient).cornerRadius(3)
+            }
+        }
+    }
+
+    private var overallDistanceChart: some View {
+        let distUnit = isMetric ? "km" : "mi"
+        let data = allFilteredSessions.compactMap { s -> (Date, Double)? in
+            guard let m = s.workoutData?.distanceMeters, m > 0 else { return nil }
+            return (s.date, isMetric ? m / 1000 : m / 1609.34)
+        }
+        return chartCard("Distance (\(distUnit))", nil) {
+            Chart(data, id: \.0) { date, dist in
+                BarMark(x: .value("Date", date), y: .value(distUnit, dist))
+                    .foregroundStyle(Color.purple.gradient).cornerRadius(3)
+            }
+        }
+    }
+
+    private var overallHRChart: some View {
+        let data = allFilteredSessions.compactMap { s -> (Date, Double, Double?, Double?)? in
+            guard let avg = s.workoutData?.avgHeartRate else { return nil }
+            return (s.date, avg, s.workoutData?.minHeartRate, s.workoutData?.maxHeartRate)
+        }
+        return chartCard("Avg Heart Rate (bpm)", "With min/max range where available") {
+            Chart(data, id: \.0) { date, avg, lo, hi in
+                if let l = lo, let h = hi {
+                    AreaMark(x: .value("Date", date), yStart: .value("Min", l), yEnd: .value("Max", h))
+                        .foregroundStyle(Color.red.opacity(0.1))
+                }
+                LineMark(x: .value("Date", date), y: .value("HR", avg))
+                    .foregroundStyle(Color.red.gradient).interpolationMethod(.catmullRom)
+                PointMark(x: .value("Date", date), y: .value("HR", avg))
+                    .foregroundStyle(Color.red).symbolSize(40)
+            }
+            .chartYScale(domain: .automatic(includesZero: false))
+        }
+    }
+
+    private var overallPaceChart: some View {
+        let data = allFilteredSessions.compactMap { s -> (Date, Double)? in
+            guard let p = s.workoutData?.avgPaceSecondsPerKm else { return nil }
+            return (s.date, (isMetric ? p : p * 1.60934) / 60)
+        }
+        let unit = isMetric ? "min/km" : "min/mi"
+        return chartCard("Avg Pace (\(unit))", "Lower = faster") {
+            Chart(data, id: \.0) { date, pace in
+                LineMark(x: .value("Date", date), y: .value("Pace", pace))
+                    .foregroundStyle(Color.green.gradient).interpolationMethod(.catmullRom)
+                PointMark(x: .value("Date", date), y: .value("Pace", pace))
+                    .foregroundStyle(Color.green).symbolSize(40)
+            }
+            .chartYScale(domain: .automatic(includesZero: false))
+            .chartYAxis {
+                AxisMarks { v in
+                    AxisValueLabel {
+                        if let d = v.as(Double.self) {
+                            let m = Int(d); let s = Int((d - Double(m)) * 60)
+                            Text("\(m):\(String(format: "%02d", s))")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Unified activity section
+
+    private var activitySection: some View {
+        let exerciseLogs = selectedExercise.isEmpty ? [] : allSessions
+            .filter { !$0.isPlanned }
+            .flatMap { $0.exerciseLogs }
+            .filter { $0.exerciseName == selectedExercise && $0.date >= since }
+            .sorted { $0.date < $1.date }
+
+        return VStack(spacing: 16) {
+            HStack {
+                recordCard("Sessions", "\(filteredSessions.count)", "checkmark.circle", .blue)
+                Spacer()
+            }
+
             if filteredSessions.contains(where: { ($0.workoutData?.durationSeconds ?? 0) > 0 }) {
                 durationChart
+            }
+            if filteredSessions.contains(where: { ($0.workoutData?.distanceMeters ?? 0) > 0 }) {
+                distanceChart
+            }
+            if filteredSessions.contains(where: { $0.workoutData?.avgPaceSecondsPerKm != nil }) {
+                paceChart
             }
             if filteredSessions.contains(where: { $0.workoutData?.avgHeartRate != nil }) {
                 hrChart
@@ -105,22 +214,12 @@ struct ProgressDetailView: View {
             if filteredSessions.contains(where: { ($0.workoutData?.elevationGainMeters ?? 0) > 0 }) {
                 elevationChart
             }
-        }
-    }
 
-    private var cardioRecordsRow: some View {
-        let paceUnit = isMetric ? "/km" : "/mi"
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                recordCard("Sessions", "\(filteredSessions.count)", "checkmark.circle", .blue)
-                if let best = filteredSessions.compactMap({ $0.workoutData?.avgPaceSecondsPerKm }).min() {
-                    recordCard("Best Pace", paceStr(best) + paceUnit, "hare", .green)
-                }
-                if let dist = filteredSessions.compactMap({ $0.workoutData?.distanceMeters }).max() {
-                    recordCard("Longest", dist.distanceFormatted(metric: isMetric), "map", .purple)
-                }
-                if let elev = filteredSessions.compactMap({ $0.workoutData?.elevationGainMeters }).max() {
-                    recordCard("Best Climb", String(format: "%.0f m", elev), "mountain.2", .brown)
+            if isWeightTraining && !selectedExercise.isEmpty {
+                if exerciseLogs.isEmpty {
+                    emptyPrompt("No \(selectedExercise) data in this period.")
+                } else {
+                    strengthExerciseCharts(exerciseLogs)
                 }
             }
         }
@@ -198,113 +297,85 @@ struct ProgressDetailView: View {
         }
     }
 
-    // MARK: - Strength section
+    private var distanceChart: some View {
+        let distUnit = isMetric ? "km" : "mi"
+        let data = filteredSessions.compactMap { s -> (Date, Double)? in
+            guard let m = s.workoutData?.distanceMeters, m > 0 else { return nil }
+            return (s.date, isMetric ? m / 1000 : m / 1609.34)
+        }
+        return chartCard("Distance (\(distUnit))", nil) {
+            Chart(data, id: \.0) { date, dist in
+                BarMark(x: .value("Date", date), y: .value(distUnit, dist))
+                    .foregroundStyle(Color.purple.gradient).cornerRadius(3)
+            }
+        }
+    }
 
-    private var strengthSection: some View {
-        Group {
-            if selectedExercise.isEmpty {
-                emptyPrompt("Select an exercise above.")
-            } else {
-                let logs = allSessions
-                    .filter { !$0.isPlanned }
-                    .flatMap { $0.exerciseLogs }
-                    .filter { $0.exerciseName == selectedExercise && $0.date >= since }
-                    .sorted { $0.date < $1.date }
 
-                if logs.isEmpty {
-                    emptyPrompt("No \(selectedExercise) data since \(since.shortFormatted).")
-                } else {
-                    VStack(spacing: 16) {
-                        strengthRecordsRow(logs)
-                        strengthMultiLineChart(logs)
-                        strengthIndividualCharts(logs)
+    private func strengthExerciseCharts(_ logs: [WeightExerciseTypeLog]) -> some View {
+        let weightUnit = isMetric ? "kg" : "lbs"
+        let mult = isMetric ? 1.0 : 2.20462
+
+        let repsData    = logs.map { (date: $0.date, val: Double($0.totalReps)) }
+        let setsData    = logs.map { (date: $0.date, val: Double($0.totalSets)) }
+        let avgRepsData = logs.map { (date: $0.date, val: $0.totalSets > 0 ? Double($0.totalReps) / Double($0.totalSets) : 0.0) }
+        let weightData  = logs.compactMap { log -> (Date, Double)? in
+            let nonBW = log.sets.filter { !$0.isBodyweight }
+            guard !nonBW.isEmpty else { return nil }
+            let avg = nonBW.map(\.weightKg).reduce(0, +) / Double(nonBW.count) * mult
+            return (log.date, avg)
+        }
+
+        return VStack(spacing: 16) {
+            chartCard("Total Reps", "Per session") {
+                Chart(repsData, id: \.date) { date, val in
+                    LineMark(x: .value("Date", date), y: .value("Reps", val))
+                        .foregroundStyle(Color.blue.gradient).interpolationMethod(.catmullRom)
+                    PointMark(x: .value("Date", date), y: .value("Reps", val))
+                        .foregroundStyle(Color.blue).symbolSize(40)
+                        .annotation(position: .top, spacing: 4) {
+                            Text("\(Int(val))").font(.caption2.bold()).foregroundStyle(.secondary)
+                        }
+                }
+                .chartYScale(domain: .automatic(includesZero: true))
+            }
+            chartCard("Avg Reps / Set", "Per session") {
+                Chart(avgRepsData, id: \.date) { date, val in
+                    LineMark(x: .value("Date", date), y: .value("Reps/Set", val))
+                        .foregroundStyle(Color.green.gradient).interpolationMethod(.catmullRom)
+                    PointMark(x: .value("Date", date), y: .value("Reps/Set", val))
+                        .foregroundStyle(Color.green).symbolSize(40)
+                        .annotation(position: .top, spacing: 4) {
+                            Text(String(format: "%.1f", val)).font(.caption2.bold()).foregroundStyle(.secondary)
+                        }
+                }
+                .chartYScale(domain: .automatic(includesZero: true))
+            }
+            chartCard("Total Sets", "Per session") {
+                Chart(setsData, id: \.date) { date, val in
+                    LineMark(x: .value("Date", date), y: .value("Sets", val))
+                        .foregroundStyle(Color.purple.gradient).interpolationMethod(.catmullRom)
+                    PointMark(x: .value("Date", date), y: .value("Sets", val))
+                        .foregroundStyle(Color.purple).symbolSize(40)
+                        .annotation(position: .top, spacing: 4) {
+                            Text("\(Int(val))").font(.caption2.bold()).foregroundStyle(.secondary)
+                        }
+                }
+                .chartYScale(domain: .automatic(includesZero: true))
+            }
+            if !weightData.isEmpty {
+                chartCard("Avg Weight (\(weightUnit))", "Average across all sets per session") {
+                    Chart(weightData, id: \.0) { date, val in
+                        LineMark(x: .value("Date", date), y: .value(weightUnit, val))
+                            .foregroundStyle(Color.orange.gradient).interpolationMethod(.catmullRom)
+                        PointMark(x: .value("Date", date), y: .value(weightUnit, val))
+                            .foregroundStyle(Color.orange).symbolSize(40)
+                            .annotation(position: .top, spacing: 4) {
+                                Text(String(format: "%.1f", val)).font(.caption2.bold()).foregroundStyle(.secondary)
+                            }
                     }
+                    .chartYScale(domain: .automatic(includesZero: true))
                 }
-            }
-        }
-    }
-
-    private func strengthRecordsRow(_ logs: [WeightExerciseTypeLog]) -> some View {
-        let unit = isMetric ? "kg" : "lbs"
-        let mult = isMetric ? 1.0 : 2.20462
-        let bestRM   = logs.compactMap(\.estimatedOneRM).max().map { $0 * mult } ?? 0
-        let bestW    = logs.compactMap(\.maxWeightKg).max().map { $0 * mult } ?? 0
-        let bestVol  = logs.map(\.totalVolume).max().map { $0 * mult } ?? 0
-
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                recordCard("Sessions",  "\(logs.count)",                            "checkmark.circle", .blue)
-                recordCard("Best 1RM",  String(format: "%.1f \(unit)", bestRM),     "trophy",           .yellow)
-                recordCard("Max Weight",String(format: "%.1f \(unit)", bestW),      "dumbbell",         .orange)
-                recordCard("Best Vol.", String(format: "%.0f \(unit)", bestVol),    "chart.bar",        .purple)
-            }
-        }
-    }
-
-    /// Single chart with 4 normalised lines (index = 100 at first session, shows % change)
-    private func strengthMultiLineChart(_ logs: [WeightExerciseTypeLog]) -> some View {
-        let mult = isMetric ? 1.0 : 2.20462
-
-        // Build raw series
-        let weights  = logs.compactMap { l -> (Date, Double)? in l.maxWeightKg.map { (l.date, $0 * mult) } }
-        let totalReps = logs.map { (date: $0.date, val: Double($0.totalReps)) }
-        let repsPerSet = logs.map { (date: $0.date, val: $0.totalSets > 0 ? Double($0.totalReps) / Double($0.totalSets) : 0) }
-        let totalSets  = logs.map { (date: $0.date, val: Double($0.totalSets)) }
-
-        // Normalise each series to 100 at first point
-        func normalise(_ pts: [(Date, Double)]) -> [(Date, Double, String)] {
-            guard let base = pts.first?.1, base > 0 else { return [] }
-            return pts.map { ($0.0, $0.1 / base * 100, "") }
-        }
-
-        let wN  = normalise(weights).map    { IndexedPoint(date: $0.0, value: $0.1, series: "Max Weight") }
-        let rN  = normalise(totalReps).map  { IndexedPoint(date: $0.0, value: $0.1, series: "Total Reps") }
-        let rpN = normalise(repsPerSet).map { IndexedPoint(date: $0.0, value: $0.1, series: "Reps/Set") }
-        let sN  = normalise(totalSets).map  { IndexedPoint(date: $0.0, value: $0.1, series: "Total Sets") }
-        let allPoints = wN + rN + rpN + sN
-
-        return chartCard("Progression (indexed to 100)", "All metrics relative to your first session") {
-            Chart(allPoints) { pt in
-                LineMark(x: .value("Date", pt.date), y: .value("%", pt.value))
-                    .foregroundStyle(by: .value("Metric", pt.series))
-                    .interpolationMethod(.catmullRom)
-                PointMark(x: .value("Date", pt.date), y: .value("%", pt.value))
-                    .foregroundStyle(by: .value("Metric", pt.series))
-                    .symbolSize(30)
-            }
-            .chartForegroundStyleScale([
-                "Max Weight": Color.orange,
-                "Total Reps": Color.blue,
-                "Reps/Set":   Color.green,
-                "Total Sets": Color.purple,
-            ])
-            .chartLegend(position: .bottom, alignment: .leading)
-            .chartYAxis { AxisMarks { v in AxisValueLabel { if let d = v.as(Double.self) { Text("\(Int(d))%") } } } }
-        }
-    }
-
-    private func strengthIndividualCharts(_ logs: [WeightExerciseTypeLog]) -> some View {
-        let mult = isMetric ? 1.0 : 2.20462
-        let unit = isMetric ? "kg" : "lbs"
-
-        return VStack(spacing: 14) {
-            chartCard("Max Weight (\(unit))", nil) {
-                Chart(logs.compactMap { l -> (Date, Double)? in l.maxWeightKg.map { (l.date, $0 * mult) } }, id: \.0) { d, v in
-                    LineMark(x: .value("Date", d), y: .value("Weight", v))
-                        .foregroundStyle(Color.orange.gradient).interpolationMethod(.catmullRom)
-                    PointMark(x: .value("Date", d), y: .value("Weight", v))
-                        .foregroundStyle(Color.orange).symbolSize(40)
-                }
-                .chartYScale(domain: .automatic(includesZero: false))
-            }
-            chartCard("Est. 1RM (\(unit))", "Epley: weight × (1 + reps/30)") {
-                Chart(logs.compactMap { l -> (Date, Double)? in l.estimatedOneRM.map { (l.date, $0 * mult) } }, id: \.0) { d, v in
-                    LineMark(x: .value("Date", d), y: .value("1RM", v))
-                        .foregroundStyle(Color.yellow.gradient).interpolationMethod(.catmullRom)
-                    PointMark(x: .value("Date", d), y: .value("1RM", v))
-                        .foregroundStyle(Color.yellow).symbolSize(40)
-                }
-                .chartYScale(domain: .automatic(includesZero: false))
             }
         }
     }
@@ -340,16 +411,5 @@ struct ProgressDetailView: View {
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
     }
 
-    private func paceStr(_ secPerKm: Double) -> String {
-        let pace = isMetric ? secPerKm : secPerKm * 1.60934
-        let m = Int(pace) / 60; let s = Int(pace) % 60
-        return String(format: "%d:%02d ", m, s)
-    }
 }
 
-private struct IndexedPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    let value: Double
-    let series: String
-}

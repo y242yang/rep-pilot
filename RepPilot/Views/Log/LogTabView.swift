@@ -28,7 +28,6 @@ struct LogTabView: View {
 
     @State private var showAddWorkout = false
     @State private var showLogWeight = false
-    @State private var showLogMenu = false
     @State private var showSettings = false
     @State private var isImporting = false
     @State private var syncResult: SyncResult? = nil
@@ -75,15 +74,18 @@ struct LogTabView: View {
                         }
                         .disabled(isImporting)
 
-                        Button { showLogMenu = true } label: {
+                        Menu {
+                            Button { showAddWorkout = true } label: {
+                                Label("Log Workout", systemImage: "figure.run")
+                            }
+                            Button { showLogWeight = true } label: {
+                                Label("Log Body Weight", systemImage: "scalemass")
+                            }
+                        } label: {
                             Image(systemName: "plus")
                         }
                     }
                 }
-            }
-            .confirmationDialog("Log", isPresented: $showLogMenu) {
-                Button("Log Workout")     { showAddWorkout = true }
-                Button("Log Body Weight") { showLogWeight  = true }
             }
             .navigationDestination(for: WorkoutSession.self) { session in
                 WorkoutDetailView(session: session)

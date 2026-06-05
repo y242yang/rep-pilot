@@ -10,15 +10,7 @@ final class ProgressViewModel {
     var error: String?
     var selectedWeekStart: Date = Date().startOfWeek
 
-    private var coachingService: CoachingService
-
-    init(settings: AppSettings) {
-        self.coachingService = settings.makeCoachingService()
-    }
-
-    func refreshCoachingService(settings: AppSettings) {
-        coachingService = settings.makeCoachingService()
-    }
+    private let coachingService: CoachingService = RuleBasedCoachingService()
 
     func loadWeeklyReport(sessions: [WorkoutSession]) async {
         isLoading = true
