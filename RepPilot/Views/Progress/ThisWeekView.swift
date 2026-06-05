@@ -15,7 +15,7 @@ struct ThisWeekView: View {
     // Last 5 weeks data for the volume chart
     private var weeklyVolume: [WeekBar] {
         (0..<5).map { offset in
-            let start = Calendar.current.date(byAdding: .weekOfYear, value: -(4 - offset), to: Date().startOfWeek) ?? Date()
+            let start = Calendar.current.date(byAdding: .weekOfYear, value: -(4 - offset), to: selectedWeekStart) ?? Date()
             let end   = Calendar.current.date(byAdding: .day, value: 7, to: start) ?? start
             let sessions = allSessions.filter { $0.date >= start && $0.date < end }
             let cardioMins   = sessions.filter { $0.cardioScore   >= $0.strengthScore && $0.cardioScore   >= $0.mobilityScore }

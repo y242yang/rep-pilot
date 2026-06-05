@@ -199,7 +199,9 @@ struct LogTabView: View {
 
         do {
             try await healthKit.requestAuthorization()
-            let imported = try await healthKit.fetchRecentWorkouts(limit: 50, context: context)
+            let since = sessions.map(\.date).max()
+                ?? Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
+            let imported = try await healthKit.fetchRecentWorkouts(since: since, context: context)
             let existingDates = Set(sessions.map { $0.date.timeIntervalSince1970 })
 
             var newCount = 0

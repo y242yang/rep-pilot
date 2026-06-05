@@ -33,15 +33,16 @@ final class HealthKitService: ObservableObject {
         isAuthorized = true
     }
 
-    func fetchRecentWorkouts(limit: Int = 50, context: ModelContext) async throws -> [WorkoutSession] {
+    func fetchRecentWorkouts(since: Date, context: ModelContext) async throws -> [WorkoutSession] {
         guard isAvailable else { return [] }
 
+        let predicate = HKQuery.predicateForSamples(withStart: since, end: nil, options: .strictStartDate)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
         let workouts: [HKWorkout] = try await withCheckedThrowingContinuation { continuation in
             let query = HKSampleQuery(
                 sampleType: HKObjectType.workoutType(),
-                predicate: nil,
-                limit: limit,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
                 sortDescriptors: [sort]
             ) { (_: HKSampleQuery, samples: [HKSample]?, error: Error?) in
                 if let error { continuation.resume(throwing: error); return }
