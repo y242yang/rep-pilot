@@ -22,7 +22,7 @@ struct CalendarTabView: View {
                 Divider()
 
                 LazyVGrid(columns: columns, spacing: 4) {
-                    ForEach(dayLabels, id: \.self) { label in
+                    ForEach(Array(dayLabels.enumerated()), id: \.offset) { _, label in
                         Text(label).font(.caption.bold()).foregroundStyle(.secondary).frame(maxWidth: .infinity)
                     }
                     ForEach(daysInMonth(), id: \.self) { date in
@@ -44,6 +44,7 @@ struct CalendarTabView: View {
                     }
                 }
                 .padding(.horizontal, 8)
+                .padding(.top, 10)
 
                 Divider()
                 upcomingList

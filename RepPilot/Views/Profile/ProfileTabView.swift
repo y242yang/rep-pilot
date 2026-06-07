@@ -4,10 +4,19 @@ import PhotosUI
 
 struct ProfileTabView: View {
     @Query private var profiles: [UserProfile]
+    @Query(
+        filter: #Predicate<WorkoutSession> { !$0.isPlanned },
+        sort: \WorkoutSession.date, order: .reverse
+    ) private var sessions: [WorkoutSession]
     @Environment(\.modelContext) private var context
 
     @State private var isEditing = false
     @State private var showSettings = false
+    @State private var selectedPhotoSession: WorkoutSession?
+
+    private var photoSessions: [WorkoutSession] {
+        sessions.filter { $0.photoPath != nil }
+    }
 
     private var profile: UserProfile? { profiles.first }
 
@@ -40,6 +49,9 @@ struct ProfileTabView: View {
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $isEditing) {
                 if let profile { EditProfileView(profile: profile) }
+            }
+            .sheet(item: $selectedPhotoSession) { session in
+                WorkoutPhotoFullScreenView(session: session)
             }
         }
     }
@@ -91,8 +103,93 @@ struct ProfileTabView: View {
                     }
                 }
             }
+
+            // Workout photo gallery
+            if !photoSessions.isEmpty {
+                Section("Workout Photos (\(photoSessions.count))") {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 2), count: 3), spacing: 2) {
+                        ForEach(photoSessions) { session in
+                            WorkoutPhotoThumbnail(session: session)
+                                .onTapGesture { selectedPhotoSession = session }
+                        }
+                    }
+                    .listRowInsets(EdgeInsets())
+                }
+            }
         }
         .listStyle(.insetGrouped)
+    }
+}
+
+// MARK: - Workout photo thumbnail
+
+private struct WorkoutPhotoThumbnail: View {
+    let session: WorkoutSession
+
+    var body: some View {
+        Group {
+            if let img = loadImage() {
+                img.resizable().scaledToFill()
+            } else {
+                Color.secondary.opacity(0.2)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .aspectRatio(1, contentMode: .fill)
+        .clipped()
+    }
+
+    private func loadImage() -> Image? {
+        guard let path = session.photoPath,
+              let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let data = try? Data(contentsOf: dir.appendingPathComponent(path)),
+              let ui = UIImage(data: data) else { return nil }
+        return Image(uiImage: ui)
+    }
+}
+
+// MARK: - Full-screen photo view
+
+struct WorkoutPhotoFullScreenView: View {
+    let session: WorkoutSession
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                if let img = loadImage() {
+                    img.resizable().scaledToFit()
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 2) {
+                        Text(session.activityName.isEmpty ? "Workout" : session.activityName)
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.white)
+                        Text(session.date.formatted(.dateTime.day().month(.abbreviated).year()))
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.7))
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .foregroundStyle(.white)
+                }
+            }
+            .toolbarBackground(.black, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+        }
+    }
+
+    private func loadImage() -> Image? {
+        guard let path = session.photoPath,
+              let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let data = try? Data(contentsOf: dir.appendingPathComponent(path)),
+              let ui = UIImage(data: data) else { return nil }
+        return Image(uiImage: ui)
     }
 }
 

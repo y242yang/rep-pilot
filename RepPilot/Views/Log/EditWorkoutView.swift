@@ -293,8 +293,8 @@ struct EditWorkoutView: View {
         let filename = "\(UUID().uuidString).jpg"
         guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
         let compressed = UIImage(data: data)
-            .flatMap { $0.resized(toMaxDimension: 1080) }
-            .flatMap { $0.jpegData(compressionQuality: 0.7) } ?? data
+            .flatMap { $0.resized(toMaxDimension: 720) }
+            .flatMap { $0.jpegData(compressionQuality: 0.5) } ?? data
         try? compressed.write(to: dir.appendingPathComponent(filename))
         return filename
     }

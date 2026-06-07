@@ -65,6 +65,7 @@ struct OfflineCoachingView: View {
                 DatePicker("", selection: $startDate, in: ...endDate, displayedComponents: .date)
                     .datePickerStyle(.compact)
                     .labelsHidden()
+                    .frame(minWidth: 110, alignment: .leading)
             }
             Image(systemName: "arrow.right").foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 2) {
@@ -72,6 +73,7 @@ struct OfflineCoachingView: View {
                 DatePicker("", selection: $endDate, in: startDate...Date(), displayedComponents: .date)
                     .datePickerStyle(.compact)
                     .labelsHidden()
+                    .frame(minWidth: 110, alignment: .leading)
             }
         }
         .padding()
