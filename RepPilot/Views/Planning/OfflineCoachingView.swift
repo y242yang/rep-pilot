@@ -10,6 +10,7 @@ struct OfflineCoachingView: View {
     @AppStorage("coachingGoal") private var goalRaw: String = FitnessGoal.generalFitness.rawValue
     @State private var startDate: Date = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
     @State private var endDate: Date = Date()
+    @State private var activeDateField: DateField?
 
     private var goal: FitnessGoal { FitnessGoal(rawValue: goalRaw) ?? .generalFitness }
 
@@ -58,27 +59,62 @@ struct OfflineCoachingView: View {
 
     // MARK: - Date range
 
+    private enum DateField: Identifiable {
+        case start, end
+        var id: Self { self }
+        var title: String { self == .start ? "From" : "To" }
+    }
+
     private var dateRangeSection: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("From").font(.caption2).foregroundStyle(.secondary)
-                DatePicker("", selection: $startDate, in: ...endDate, displayedComponents: .date)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                    .frame(minWidth: 110, alignment: .leading)
-            }
+            dateField(.start, date: startDate)
             Image(systemName: "arrow.right").foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("To").font(.caption2).foregroundStyle(.secondary)
-                DatePicker("", selection: $endDate, in: startDate...Date(), displayedComponents: .date)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                    .frame(minWidth: 110, alignment: .leading)
-            }
+            dateField(.end, date: endDate)
         }
         .padding()
         .background(.background, in: RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+        .sheet(item: $activeDateField) { field in
+            NavigationStack {
+                Group {
+                    switch field {
+                    case .start:
+                        DatePicker(field.title, selection: $startDate, in: ...endDate, displayedComponents: .date)
+                    case .end:
+                        DatePicker(field.title, selection: $endDate, in: startDate...Date(), displayedComponents: .date)
+                    }
+                }
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .padding()
+                .navigationTitle(field.title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { activeDateField = nil }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+    }
+
+    /// Renders the date as fixed `MMM d, yyyy` text we control, rather than relying on
+    /// `DatePicker(.compact)`'s adaptive format — which can pick different formats for
+    /// the two fields depending on the width each is laid out with.
+    private func dateField(_ field: DateField, date: Date) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(field.title).font(.caption2).foregroundStyle(.secondary)
+            Button { activeDateField = field } label: {
+                Text(date.formatted(.dateTime.month(.abbreviated).day().year()))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+        }
     }
 
     // MARK: - Stats grid

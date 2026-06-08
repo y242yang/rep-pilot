@@ -69,10 +69,12 @@ struct LogTabView: View {
                             if isImporting {
                                 ProgressView().scaleEffect(0.8)
                             } else {
-                                Image(systemName: "arrow.triangle.2.circlepath")
+                                Image(systemName: "heart.fill")
+                                    .foregroundStyle(.red)
                             }
                         }
                         .disabled(isImporting)
+                        .accessibilityLabel("Sync with Apple Health")
 
                         Menu {
                             Button { showAddWorkout = true } label: {
@@ -199,10 +201,15 @@ struct LogTabView: View {
 
         do {
             try await healthKit.requestAuthorization()
-            let since = sessions.map(\.date).max()
+            let lastSynced = sessions.max { $0.date < $1.date }
+            let since = lastSynced?.date
                 ?? Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
             let imported = try await healthKit.fetchRecentWorkouts(since: since, context: context)
-            let existingDates = Set(sessions.map { $0.date.timeIntervalSince1970 })
+
+            // A fetched workout is genuinely new only if it starts after the last-synced
+            // workout ends — matching on exact timestamps is fragile (HealthKit can return
+            // the same workout with sub-second differences from how it was originally stored).
+            let cutoff = lastSynced?.endDate ?? .distantPast
 
             var newCount = 0
             var skippedCount = 0
@@ -211,7 +218,7 @@ struct LogTabView: View {
             formatter.dateStyle = .medium
 
             for session in imported {
-                if !existingDates.contains(session.date.timeIntervalSince1970) {
+                if session.date > cutoff {
                     context.insert(session)
                     newCount += 1
                     let label = session.activityName.isEmpty ? session.workoutType.rawValue : session.activityName

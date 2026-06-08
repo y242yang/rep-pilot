@@ -27,6 +27,22 @@ final class HealthKitService: ObservableObject {
 
     var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
+    enum ConnectionStatus {
+        case notConnected
+        case denied
+        case connected
+    }
+
+    /// HealthKit only reports authorization status for types we write (read access is kept private),
+    /// so workout-write status is the closest available signal for "is Health connected".
+    var connectionStatus: ConnectionStatus {
+        switch store.authorizationStatus(for: HKObjectType.workoutType()) {
+        case .sharingAuthorized: return .connected
+        case .sharingDenied:     return .denied
+        default:                 return .notConnected
+        }
+    }
+
     func requestAuthorization() async throws {
         guard isAvailable else { return }
         try await store.requestAuthorization(toShare: writeTypes, read: readTypes)
