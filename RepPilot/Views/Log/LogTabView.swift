@@ -5,6 +5,7 @@ struct SyncResult {
     var imported: Int
     var skipped: Int
     var details: [String]
+    var debug: [String] = []
 }
 
 struct LogTabView: View {
@@ -204,12 +205,31 @@ struct LogTabView: View {
             let lastSynced = sessions.max { $0.date < $1.date }
             let since = lastSynced?.date
                 ?? Calendar.current.date(byAdding: .weekOfYear, value: -4, to: Date())!
-            let imported = try await healthKit.fetchRecentWorkouts(since: since, context: context)
+
+            // Raw HealthKit samples only — nothing here creates a SwiftData object yet,
+            // so de-duplication can run before we pay for `convert()` (which sets up
+            // `activityType`/`workoutData` relationships and, as a SwiftData quirk,
+            // can implicitly attach the resulting WorkoutSession to the context even
+            // when we never call context.insert on it).
+            let workouts = try await healthKit.fetchWorkouts(since: since)
 
             // A fetched workout is genuinely new only if it starts after the last-synced
             // workout ends — matching on exact timestamps is fragile (HealthKit can return
             // the same workout with sub-second differences from how it was originally stored).
             let cutoff = lastSynced?.endDate ?? .distantPast
+
+            // Belt-and-suspenders: a workout already imported by HealthKit ID should never
+            // be re-imported, even if the user has since edited its date/duration locally
+            // (which would otherwise defeat the cutoff check above).
+            let existingHealthKitIDs = Set(sessions.compactMap(\.healthKitWorkoutID))
+
+            // Apple Watch sometimes logs the same activity twice — e.g. an auto-detected
+            // generic "Other" workout alongside the specific type you actually did —
+            // producing two separate HealthKit records with different IDs but
+            // near-identical start times. Treat a workout starting within a few minutes
+            // of an already-known session as a duplicate of it.
+            let duplicateWindow: TimeInterval = 5 * 60
+            var knownStartTimes = sessions.map(\.date)
 
             var newCount = 0
             var skippedCount = 0
@@ -217,18 +237,58 @@ struct LogTabView: View {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
 
-            for session in imported {
-                if session.date > cutoff {
+            // TEMPORARY DEBUG: surfaces per-workout decisions in the sync sheet so we can
+            // see why a workout was imported/skipped without needing Xcode console access.
+            var debugLines: [String] = []
+            let debugFormatter = DateFormatter()
+            debugFormatter.dateStyle = .short
+            debugFormatter.timeStyle = .medium
+            debugLines.append("existing IDs: \(existingHealthKitIDs.map { String($0.suffix(6)) })")
+            debugLines.append("fetched: \(workouts.count)")
+
+            // Process recognized activities first so an unrecognized "Other" workout
+            // for the same time slot is the one that gets skipped as the duplicate.
+            let sortedWorkouts = workouts.sorted { a, b in
+                let aOther = healthKit.activityName(for: a) == "Other" ? 1 : 0
+                let bOther = healthKit.activityName(for: b) == "Other" ? 1 : 0
+                return aOther < bOther
+            }
+
+            for workout in sortedWorkouts {
+                let hkID = workout.uuid.uuidString
+                let date = workout.startDate
+                let label = healthKit.activityName(for: workout)
+                let hkSuffix = String(hkID.suffix(6))
+                let when = debugFormatter.string(from: date)
+
+                if existingHealthKitIDs.contains(hkID) {
+                    skippedCount += 1
+                    debugLines.append("SKIP(id) \(when) \(label) [\(hkSuffix)]")
+                    continue
+                }
+                if knownStartTimes.contains(where: { abs($0.timeIntervalSince(date)) < duplicateWindow }) {
+                    skippedCount += 1
+                    debugLines.append("SKIP(time) \(when) \(label) [\(hkSuffix)]")
+                    continue
+                }
+                if date > cutoff {
+                    guard let session = try await healthKit.convert(workout: workout, context: context) else {
+                        skippedCount += 1
+                        debugLines.append("SKIP(convert) \(when) \(label) [\(hkSuffix)]")
+                        continue
+                    }
                     context.insert(session)
+                    knownStartTimes.append(date)
                     newCount += 1
-                    let label = session.activityName.isEmpty ? session.workoutType.rawValue : session.activityName
-                    details.append("\(formatter.string(from: session.date)) — \(label)")
+                    details.append("\(formatter.string(from: date)) — \(label)")
+                    debugLines.append("NEW \(when) \(label) [\(hkSuffix)]")
                 } else {
                     skippedCount += 1
+                    debugLines.append("SKIP(cutoff) \(when) \(label) [\(hkSuffix)]")
                 }
             }
 
-            syncResult = SyncResult(imported: newCount, skipped: skippedCount, details: details)
+            syncResult = SyncResult(imported: newCount, skipped: skippedCount, details: details, debug: debugLines)
             showSyncResult = true
         } catch {
             syncResult = SyncResult(
@@ -251,8 +311,16 @@ struct SyncResultSheet: View {
         NavigationStack {
             List {
                 Section {
-                    LabeledContent("New workouts added", value: "\(result.imported)")
-                    LabeledContent("Already in app", value: "\(result.skipped)")
+                    if result.imported > 0 {
+                        Text("Added \(result.imported) new workout\(result.imported == 1 ? "" : "s")")
+                            .font(.headline)
+                    } else if result.skipped > 0 {
+                        Text("You're all caught up — no new workouts to import.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("No workouts found in Apple Health.")
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 if !result.details.isEmpty {
@@ -263,9 +331,17 @@ struct SyncResultSheet: View {
                     }
                 } else if result.imported == 0 && result.skipped == 0 {
                     Section {
-                        Text("No workouts found in Apple Health. Make sure you've granted access and have workouts recorded.")
+                        Text("Make sure you've granted access in iOS Settings ▸ Health ▸ Data Access & Devices, and that you have workouts recorded.")
                             .foregroundStyle(.secondary)
                             .font(.subheadline)
+                    }
+                }
+
+                if !result.debug.isEmpty {
+                    Section("Debug") {
+                        ForEach(result.debug, id: \.self) { line in
+                            Text(line).font(.caption.monospaced())
+                        }
                     }
                 }
             }

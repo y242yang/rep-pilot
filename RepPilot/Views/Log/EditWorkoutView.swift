@@ -11,6 +11,7 @@ struct EditWorkoutView: View {
     @State private var selectedActivityType: ActivityType? = nil
     @State private var durationHours: Int = 0
     @State private var durationMinutes: Int = 0
+    @State private var durationSecondsRemainder: Double = 0
     @State private var distanceInput: String = ""
     @State private var calories: String = ""
     @State private var avgPaceMin: String = ""
@@ -171,6 +172,7 @@ struct EditWorkoutView: View {
             let total = Int(c.durationSeconds)
             durationHours   = total / 3600
             durationMinutes = (total % 3600) / 60
+            durationSecondsRemainder = c.durationSeconds - Double(durationHours * 3600 + durationMinutes * 60)
 
             if let dist = c.distanceMeters {
                 distanceInput = isMetric
@@ -200,7 +202,7 @@ struct EditWorkoutView: View {
         session.strengthScore = strengthScore
         session.mobilityScore = mobilityScore
 
-        let totalSecs = Double(durationHours * 3600 + durationMinutes * 60)
+        let totalSecs = Double(durationHours * 3600 + durationMinutes * 60) + durationSecondsRemainder
         session.endDate = session.date.addingTimeInterval(totalSecs)
         if session.workoutData == nil { session.workoutData = WorkoutData() }
         session.workoutData?.durationSeconds      = totalSecs

@@ -49,12 +49,16 @@ final class HealthKitService: ObservableObject {
         isAuthorized = true
     }
 
-    func fetchRecentWorkouts(since: Date, context: ModelContext) async throws -> [WorkoutSession] {
+    /// Raw HealthKit samples only — no SwiftData objects are created, so callers can
+    /// run de-duplication checks (by `uuid` / `startDate`) before deciding whether to
+    /// pay for the expensive `convert(workout:context:)` call (which creates a
+    /// `WorkoutSession` and wires up its `activityType`/`workoutData` relationships).
+    func fetchWorkouts(since: Date) async throws -> [HKWorkout] {
         guard isAvailable else { return [] }
 
         let predicate = HKQuery.predicateForSamples(withStart: since, end: nil, options: .strictStartDate)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-        let workouts: [HKWorkout] = try await withCheckedThrowingContinuation { continuation in
+        return try await withCheckedThrowingContinuation { continuation in
             let query = HKSampleQuery(
                 sampleType: HKObjectType.workoutType(),
                 predicate: predicate,
@@ -66,19 +70,15 @@ final class HealthKitService: ObservableObject {
             }
             store.execute(query)
         }
+    }
 
-        var sessions: [WorkoutSession] = []
-        for workout in workouts {
-            if let session = try await convert(workout: workout, context: context) {
-                sessions.append(session)
-            }
-        }
-        return sessions.sorted { $0.date > $1.date }
+    func activityName(for workout: HKWorkout) -> String {
+        workout.workoutActivityType.activityName
     }
 
     // MARK: - Convert + enrich
 
-    private func convert(workout: HKWorkout, context: ModelContext) async throws -> WorkoutSession? {
+    func convert(workout: HKWorkout, context: ModelContext) async throws -> WorkoutSession? {
         let name = workout.workoutActivityType.activityName
         let session = WorkoutSession(date: workout.startDate, source: .healthKit)
         if let at = DatabaseSeeder.activityType(named: name, context: context) {
