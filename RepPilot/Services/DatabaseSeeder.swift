@@ -31,10 +31,11 @@ enum DatabaseSeeder {
     // MARK: - WeightExerciseType
 
     private static func seedExerciseTypes(context: ModelContext) {
-        let existing = (try? context.fetchCount(FetchDescriptor<WeightExerciseType>())) ?? 0
-        guard existing == 0 else { return }
+        let existingNames = Set((try? context.fetch(FetchDescriptor<WeightExerciseType>()))?.map(\.name) ?? [])
+        let missing = ExerciseLibrary.all.filter { !existingNames.contains($0) }
+        guard !missing.isEmpty else { return }
 
-        for name in ExerciseLibrary.all {
+        for name in missing {
             context.insert(WeightExerciseType(name: name))
         }
         try? context.save()

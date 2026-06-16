@@ -16,6 +16,8 @@ enum ExerciseLibrary {
         "Front Raise",
         "Glute Bridge",
         "Hammer Curl",
+        "Hip Abduction",
+        "Hip Adduction",
         "Hip Thrust",
         "Incline Bench Press",
         "Cable Kickback",
