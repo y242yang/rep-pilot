@@ -43,7 +43,9 @@ struct ContentView: View {
             purgeExpiredPlannedSessions()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { purgeExpiredPlannedSessions() }
+            if phase == .active {
+                purgeExpiredPlannedSessions()
+            }
         }
         .onChange(of: profiles.count) { _, count in
             if count == 0 { showOnboarding = true }

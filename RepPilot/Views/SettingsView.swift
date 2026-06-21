@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var healthKit: HealthKitService
+    @EnvironmentObject private var connectivity: PhoneConnectivityService
     @Environment(\.dismiss) private var dismiss
     @State private var storageUsed: String = "Calculating…"
 
@@ -21,6 +22,16 @@ struct SettingsView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    HStack(spacing: 12) {
+                        Image(systemName: "applewatch")
+                            .font(.title3)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Apple Watch")
+                            Text(watchStatusText)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 } header: {
                     Text("Integrations")
                 } footer: {
@@ -29,6 +40,7 @@ struct SettingsView: View {
 
                 Section("Units") {
                     Toggle("Use metric (km, kg)", isOn: $settings.useMetricUnits)
+                        .onChange(of: settings.useMetricUnits) { _, _ in connectivity.syncSettings() }
                 }
 
                 Section("Storage") {
@@ -61,6 +73,13 @@ struct SettingsView: View {
         case .denied:       return "Access denied — enable in iOS Settings ▸ Health ▸ Data Access & Devices"
         case .notConnected: return "Not connected yet"
         }
+    }
+
+    private var watchStatusText: String {
+        if let lastSynced = connectivity.lastSyncedWorkoutAt {
+            return "Last synced \(lastSynced.formatted(.relative(presentation: .named)))"
+        }
+        return connectivity.isWatchReachable ? "Connected" : "Not connected"
     }
 
     private func calculateStorage() -> String {

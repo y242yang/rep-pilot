@@ -85,6 +85,36 @@ final class HealthKitService: ObservableObject {
             session.configure(with: at)
         }
 
+        session.workoutData = await buildWorkoutData(for: workout)
+        session.endDate = workout.endDate
+        session.healthKitWorkoutID = workout.uuid.uuidString
+        return session
+    }
+
+    /// Looks up a specific workout by its HealthKit UUID — used to find the
+    /// `HKWorkout` an Apple Watch live session saved, once it's mirrored into the
+    /// iPhone's Health store (not instant — callers should retry/poll).
+    func fetchWorkout(byUUID uuid: UUID) async throws -> HKWorkout? {
+        guard isAvailable else { return nil }
+        let predicate = HKQuery.predicateForObject(with: uuid)
+        return try await withCheckedThrowingContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: HKObjectType.workoutType(),
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: nil
+            ) { (_: HKSampleQuery, samples: [HKSample]?, error: Error?) in
+                if let error { continuation.resume(throwing: error); return }
+                continuation.resume(returning: (samples as? [HKWorkout])?.first)
+            }
+            store.execute(query)
+        }
+    }
+
+    /// Extracts everything HealthKit can tell us about a finished workout —
+    /// heart rate, calories, distance/pace/route/elevation where applicable.
+    /// Shared by the Health-import path (`convert`) and watch-workout enrichment.
+    func buildWorkoutData(for workout: HKWorkout) async -> WorkoutData {
         let distanceMeters = workout.totalDistance?.doubleValue(for: .meter())
         let calories = workout.totalEnergyBurned?.doubleValue(for: .kilocalorie())
 
@@ -127,10 +157,7 @@ final class HealthKitService: ObservableObject {
             data.routePoints = pts.map { RoutePoint($0) }
         }
 
-        session.workoutData      = data
-        session.endDate          = workout.endDate
-        session.healthKitWorkoutID = workout.uuid.uuidString
-        return session
+        return data
     }
 
     // MARK: - HR statistics query

@@ -5,6 +5,7 @@ import SwiftData
 struct RepPilotApp: App {
     @StateObject private var settings = AppSettings.shared
     @StateObject private var healthKit = HealthKitService.shared
+    @StateObject private var connectivity = PhoneConnectivityService.shared
 
     private let container: ModelContainer = {
         do {
@@ -23,7 +24,11 @@ struct RepPilotApp: App {
             ContentView()
                 .environmentObject(settings)
                 .environmentObject(healthKit)
+                .environmentObject(connectivity)
                 .preferredColorScheme(.dark)
+                .task {
+                    connectivity.configure(modelContext: container.mainContext)
+                }
         }
         .modelContainer(container)
     }

@@ -11,6 +11,7 @@ enum WorkoutType: String, CaseIterable, Codable, Identifiable {
 enum DataSource: String, Codable {
     case manual
     case healthKit
+    case watch
 }
 
 enum CardioType: String, CaseIterable, Codable, Identifiable {
