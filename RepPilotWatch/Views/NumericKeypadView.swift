@@ -33,6 +33,7 @@ struct NumericKeypadView: View {
                 keypadRow([allowsDecimal ? "." : "", "0", "⌫"])
 
                 Button("Done") {
+                    Haptics.tap()
                     onDone(text)
                     dismiss()
                 }
@@ -52,9 +53,13 @@ struct NumericKeypadView: View {
                     Button {
                         handle(key)
                     } label: {
-                        Text(key).frame(maxWidth: .infinity)
+                        Text(key)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.tappable)
                 }
             }
         }

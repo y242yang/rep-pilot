@@ -24,6 +24,8 @@
 	<string>REPILOT uses HealthKit to record your live workout session on Apple Watch.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>REPILOT saves the workout you record on Apple Watch to Apple Health.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>REPILOT uses your location to record route, distance, and pace for outdoor workouts like running, walking, cycling, and hiking.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

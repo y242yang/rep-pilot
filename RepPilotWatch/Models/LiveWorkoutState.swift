@@ -1,6 +1,6 @@
 import Foundation
 
-struct LiveSetEntry: Identifiable {
+struct LiveSetEntry: Identifiable, Hashable {
     let id = UUID()
     var setNumber: Int
     var reps: Int
@@ -25,22 +25,20 @@ final class LiveWorkoutState: ObservableObject {
         exerciseLogs.append(LiveExerciseLog(exerciseTypeName: name))
     }
 
-    func logSet(exerciseIndex: Int, reps: Int, weightKg: Double, isBodyweight: Bool) {
+    func setSets(exerciseIndex: Int, sets: [LiveSetEntry]) {
         guard exerciseLogs.indices.contains(exerciseIndex) else { return }
-        let setNumber = exerciseLogs[exerciseIndex].sets.count + 1
-        exerciseLogs[exerciseIndex].sets.append(
-            LiveSetEntry(setNumber: setNumber, reps: reps, weightKg: weightKg, isBodyweight: isBodyweight)
-        )
+        exerciseLogs[exerciseIndex].sets = sets
     }
 
     func reset() {
         exerciseLogs = []
     }
 
-    func toPayload(startDate: Date, endDate: Date, healthKitWorkoutUUID: String?) -> WatchWorkoutPayload {
+    func toPayload(startDate: Date, endDate: Date, activityTypeName: String, healthKitWorkoutUUID: String?) -> WatchWorkoutPayload {
         WatchWorkoutPayload(
             startDate: startDate,
             endDate: endDate,
+            activityTypeName: activityTypeName,
             exerciseLogs: exerciseLogs.map { log in
                 WatchExerciseLogPayload(
                     exerciseTypeName: log.exerciseTypeName,

@@ -4,11 +4,17 @@ struct ExercisePickerView: View {
     @EnvironmentObject private var liveState: LiveWorkoutState
     @Binding var path: [WatchRoute]
 
+    private var availableExercises: [String] {
+        let alreadyAdded = Set(liveState.exerciseLogs.map(\.exerciseTypeName))
+        return ExerciseLibrary.all.filter { !alreadyAdded.contains($0) }
+    }
+
     var body: some View {
-        List(ExerciseLibrary.all, id: \.self) { name in
+        List(availableExercises, id: \.self) { name in
             Button(name) {
+                Haptics.tap()
                 liveState.addExercise(named: name)
-                path.append(.setEntry(liveState.exerciseLogs.count - 1))
+                path.removeLast()
             }
         }
         .navigationTitle("Exercise")

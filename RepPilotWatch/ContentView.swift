@@ -9,10 +9,22 @@ struct ContentView: View {
             rootContent
                 .navigationDestination(for: WatchRoute.self) { route in
                     switch route {
+                    case .workoutTypePicker:
+                        WorkoutTypePickerView(path: $path)
+                    case .workoutTypeConfirm(let name):
+                        WorkoutTypeConfirmView(workoutTypeName: name, path: $path)
+                    case .selectExercises:
+                        SelectExercisesView(path: $path)
+                    case .reviewExercises(let names):
+                        ReviewExercisesView(path: $path, exerciseNames: names)
                     case .exercisePicker:
                         ExercisePickerView(path: $path)
                     case .setEntry(let idx):
-                        SetEntryView(exerciseIndex: idx)
+                        SetEntryView(exerciseIndex: idx, path: $path)
+                    case .workoutControls(let startDate):
+                        WorkoutControlsView(startDate: startDate, path: $path)
+                    case .unsynced:
+                        UnsyncedWorkoutsView()
                     }
                 }
         }
@@ -22,8 +34,8 @@ struct ContentView: View {
     private var rootContent: some View {
         switch workoutManager.state {
         case .idle, .ended:
-            StartWorkoutView()
-        case .active(let startDate):
+            StartWorkoutView(path: $path)
+        case .active(let startDate, _):
             ActiveWorkoutView(startDate: startDate, path: $path)
         }
     }

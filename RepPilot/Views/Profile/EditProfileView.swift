@@ -3,6 +3,7 @@ import PhotosUI
 
 struct EditProfileView: View {
     @Bindable var profile: UserProfile
+    @EnvironmentObject private var connectivity: PhoneConnectivityService
     @Environment(\.dismiss) private var dismiss
 
     @State private var photoItem: PhotosPickerItem?
@@ -54,7 +55,10 @@ struct EditProfileView: View {
                     Picker("Measurement System", selection: $profile.measurementSystem) {
                         ForEach(MeasurementSystem.allCases) { Text($0.rawValue).tag($0) }
                     }
-                    .onChange(of: profile.measurementSystem) { _, _ in reloadInputs() }
+                    .onChange(of: profile.measurementSystem) { _, _ in
+                        reloadInputs()
+                        connectivity.syncSettings()
+                    }
                 }
 
                 Section("Body Stats") {

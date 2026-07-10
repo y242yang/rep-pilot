@@ -15,6 +15,9 @@ final class WorkoutSession {
     var isPlanned: Bool = false
     var endDate: Date = Date()
     var healthKitWorkoutID: String? = nil
+    /// Watch payload `id` this session was imported from — used to dedup against
+    /// WatchConnectivity redelivery. Not set for sessions from other sources.
+    var watchImportID: String? = nil
 
     @Relationship var activityType: ActivityType?
 

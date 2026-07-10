@@ -1,16 +1,26 @@
 import SwiftUI
 
+private enum SetFormTarget: Identifiable, Hashable {
+    case new
+    case edit(LiveSetEntry)
+
+    var id: String {
+        switch self {
+        case .new: return "new"
+        case .edit(let set): return set.id.uuidString
+        }
+    }
+}
+
 struct SetEntryView: View {
     @EnvironmentObject private var liveState: LiveWorkoutState
     @EnvironmentObject private var connectivity: WatchConnectivityService
     let exerciseIndex: Int
+    @Binding var path: [WatchRoute]
 
-    @State private var reps: Int = 10
-    @State private var weightValue: Double = 20 // in the user's preferred unit (kg or lb)
-    @State private var isBodyweight: Bool = false
-    @State private var didSetDefaultWeight = false
-    @State private var showRepsKeypad = false
-    @State private var showWeightKeypad = false
+    @State private var stagedSets: [LiveSetEntry] = []
+    @State private var setFormTarget: SetFormTarget?
+    @State private var didLoadStagedSets = false
 
     private var isMetric: Bool { connectivity.isMetric }
     private var weightUnitLabel: String { isMetric ? "kg" : "lb" }
@@ -18,57 +28,86 @@ struct SetEntryView: View {
     var body: some View {
         List {
             if liveState.exerciseLogs.indices.contains(exerciseIndex) {
-                Section(liveState.exerciseLogs[exerciseIndex].exerciseTypeName) {
-                    valueRow(label: "Reps", valueText: "\(reps)") { showRepsKeypad = true }
-                    if !isBodyweight {
-                        valueRow(label: "Weight", valueText: "\(formatted(weightValue))\(weightUnitLabel)") { showWeightKeypad = true }
-                    }
-                    Toggle("Bodyweight", isOn: $isBodyweight)
-                    Button("Log Set") { logSet() }
-                        .buttonStyle(.borderedProminent)
-                }
-
-                let loggedSets = liveState.exerciseLogs[exerciseIndex].sets
-                if !loggedSets.isEmpty {
+                if stagedSets.isEmpty {
+                    Text("No sets logged yet")
+                        .foregroundStyle(.secondary)
+                } else {
                     Section("Logged") {
-                        ForEach(loggedSets) { set in
+                        ForEach(stagedSets) { set in
                             Text(setSummary(set))
                                 .font(.caption2)
+                                .swipeActions(edge: .trailing) {
+                                    Button(role: .destructive) {
+                                        Haptics.tap()
+                                        deleteSet(set)
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                    }
+                                    Button {
+                                        Haptics.tap()
+                                        setFormTarget = .edit(set)
+                                    } label: {
+                                        Image(systemName: "pencil")
+                                    }
+                                    .tint(.blue)
+                                }
                         }
                     }
                 }
-            }
-        }
-        .navigationTitle("Log Set")
-        .onAppear {
-            guard !didSetDefaultWeight else { return }
-            didSetDefaultWeight = true
-            weightValue = isMetric ? 20 : 45
-        }
-        .sheet(isPresented: $showRepsKeypad) {
-            NumericKeypadView(title: "Reps", initialValue: "\(reps)") { text in
-                reps = Int(text) ?? reps
-            }
-        }
-        .sheet(isPresented: $showWeightKeypad) {
-            NumericKeypadView(title: "Weight (\(weightUnitLabel))", initialValue: formatted(weightValue), allowsDecimal: true) { text in
-                weightValue = Double(text) ?? weightValue
-            }
-        }
-    }
 
-    private func valueRow(label: String, valueText: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack {
-                Text(label)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text(valueText)
-                    .font(.title3)
+                Button {
+                    Haptics.tap()
+                    setFormTarget = .new
+                } label: {
+                    Text("Log")
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.tappable)
+
+                if !stagedSets.isEmpty {
+                    Button {
+                        save()
+                    } label: {
+                        Text("Save")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.green)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.tappable)
+                }
             }
         }
-        .buttonStyle(.plain)
+        .navigationTitle(
+            liveState.exerciseLogs.indices.contains(exerciseIndex)
+                ? liveState.exerciseLogs[exerciseIndex].exerciseTypeName
+                : "Log Set"
+        )
+        .onAppear {
+            guard !didLoadStagedSets else { return }
+            didLoadStagedSets = true
+            if liveState.exerciseLogs.indices.contains(exerciseIndex) {
+                stagedSets = liveState.exerciseLogs[exerciseIndex].sets
+            }
+        }
+        .navigationDestination(item: $setFormTarget) { target in
+            switch target {
+            case .new:
+                SetFormView(initialSet: stagedSets.last, isMetric: isMetric, weightUnitLabel: weightUnitLabel) { reps, weightKg, isBodyweight in
+                    let setNumber = stagedSets.count + 1
+                    stagedSets.append(LiveSetEntry(setNumber: setNumber, reps: reps, weightKg: weightKg, isBodyweight: isBodyweight))
+                }
+            case .edit(let set):
+                SetFormView(initialSet: set, isMetric: isMetric, weightUnitLabel: weightUnitLabel) { reps, weightKg, isBodyweight in
+                    if let idx = stagedSets.firstIndex(where: { $0.id == set.id }) {
+                        stagedSets[idx].reps = reps
+                        stagedSets[idx].weightKg = weightKg
+                        stagedSets[idx].isBodyweight = isBodyweight
+                    }
+                }
+            }
+        }
     }
 
     private func setSummary(_ set: LiveSetEntry) -> String {
@@ -81,8 +120,19 @@ struct SetEntryView: View {
         value.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(value)) : String(format: "%.1f", value)
     }
 
-    private func logSet() {
-        let weightKg = isBodyweight ? 0 : (isMetric ? weightValue : WeightUnit.lbToKg(weightValue))
-        liveState.logSet(exerciseIndex: exerciseIndex, reps: reps, weightKg: weightKg, isBodyweight: isBodyweight)
+    private func deleteSet(_ set: LiveSetEntry) {
+        stagedSets.removeAll { $0.id == set.id }
+        renumberStagedSets()
+    }
+
+    private func renumberStagedSets() {
+        for idx in stagedSets.indices {
+            stagedSets[idx].setNumber = idx + 1
+        }
+    }
+
+    private func save() {
+        liveState.setSets(exerciseIndex: exerciseIndex, sets: stagedSets)
+        path.removeLast()
     }
 }

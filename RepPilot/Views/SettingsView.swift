@@ -1,10 +1,11 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
-    @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var healthKit: HealthKitService
     @EnvironmentObject private var connectivity: PhoneConnectivityService
     @Environment(\.dismiss) private var dismiss
+    @Query private var profiles: [UserProfile]
     @State private var storageUsed: String = "Calculating…"
 
     var body: some View {
@@ -38,9 +39,38 @@ struct SettingsView: View {
                     Text("Rep Pilot reads workouts, heart rate, calories, distance, and route data from Apple Health, and saves the workouts you log back to Health. Tap the heart icon on the Log tab to sync.")
                 }
 
-                Section("Units") {
-                    Toggle("Use metric (km, kg)", isOn: $settings.useMetricUnits)
-                        .onChange(of: settings.useMetricUnits) { _, _ in connectivity.syncSettings() }
+                if let profile = profiles.first {
+                    Section("Units") {
+                        Toggle("Use metric (km, kg)", isOn: Binding(
+                            get: { profile.isMetric },
+                            set: { profile.measurementSystem = $0 ? .metric : .imperial }
+                        ))
+                        .onChange(of: profile.measurementSystem) { _, _ in connectivity.syncSettings() }
+                    }
+                }
+
+                if !connectivity.unsyncedWorkouts.isEmpty {
+                    Section {
+                        ForEach(connectivity.unsyncedWorkouts) { pending in
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(pending.payload.startDate.formatted(date: .abbreviated, time: .shortened))
+                                    Text(unsyncedSubtitle(for: pending))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Button("Discard", role: .destructive) {
+                                    connectivity.discardUnsyncedWorkout(pending.id)
+                                }
+                                .font(.caption)
+                            }
+                        }
+                    } header: {
+                        Text("Unsynced")
+                    } footer: {
+                        Text("Logged on your watch but not yet imported. Rep Pilot will keep trying automatically — Discard to give up on one.")
+                    }
                 }
 
                 Section("Storage") {
@@ -80,6 +110,13 @@ struct SettingsView: View {
             return "Last synced \(lastSynced.formatted(.relative(presentation: .named)))"
         }
         return connectivity.isWatchReachable ? "Connected" : "Not connected"
+    }
+
+    private func unsyncedSubtitle(for pending: PendingWatchWorkout) -> String {
+        let name = pending.payload.activityTypeName
+        guard name == "Weight Training" else { return "\(name) — waiting to sync" }
+        let count = pending.payload.exerciseLogs.count
+        return "\(count) exercise\(count == 1 ? "" : "s") logged — waiting to sync"
     }
 
     private func calculateStorage() -> String {

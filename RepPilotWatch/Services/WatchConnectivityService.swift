@@ -7,6 +7,7 @@ final class WatchConnectivityService: NSObject, ObservableObject {
 
     @Published private(set) var isPhoneReachable = false
     @Published private(set) var isMetric = true
+    @Published private(set) var unsyncedWorkouts: [OutboxWorkout] = WatchOutboxStore.load()
 
     private let session: WCSession? = WCSession.isSupported() ? .default : nil
 
@@ -22,21 +23,47 @@ final class WatchConnectivityService: NSObject, ObservableObject {
         }
     }
 
-    /// Queued, eventually-delivered transfer — survives the iPhone app being
-    /// backgrounded or not currently reachable (unlike `sendMessage`).
+    /// Queues the workout durably (survives the app being killed before delivery is
+    /// confirmed) and immediately attempts a transfer. Safe to call repeatedly —
+    /// the phone dedups by `payload.id`, so a redundant in-flight transfer is at
+    /// worst wasted bandwidth, never a duplicate workout.
     func sendWorkout(_ payload: WatchWorkoutPayload) {
-        guard let session, let data = try? JSONEncoder().encode(payload) else { return }
-        session.transferUserInfo(["payload": data])
+        if !unsyncedWorkouts.contains(where: { $0.id == payload.id }) {
+            unsyncedWorkouts.append(OutboxWorkout(payload: payload, createdAt: Date()))
+            WatchOutboxStore.save(unsyncedWorkouts)
+        }
+        flushOutbox()
+    }
+
+    /// Retries every still-unconfirmed workout. Call whenever connectivity to the
+    /// phone might have improved (reachability change, app launch, opening the
+    /// Unsynced screen) — `transferUserInfo` itself handles the actual waiting.
+    func flushOutbox() {
+        guard let session, session.activationState == .activated, !unsyncedWorkouts.isEmpty else { return }
+        for pending in unsyncedWorkouts {
+            guard let data = try? JSONEncoder().encode(pending.payload) else { continue }
+            session.transferUserInfo(["payload": data, "id": pending.id.uuidString])
+        }
+    }
+
+    private func markDelivered(id: UUID) {
+        unsyncedWorkouts.removeAll { $0.id == id }
+        WatchOutboxStore.save(unsyncedWorkouts)
     }
 }
 
 extension WatchConnectivityService: WCSessionDelegate {
-    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+    nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
+        Task { @MainActor [weak self] in
+            self?.flushOutbox()
+        }
+    }
 
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         let reachable = session.isReachable
         Task { @MainActor [weak self] in
             self?.isPhoneReachable = reachable
+            if reachable { self?.flushOutbox() }
         }
     }
 
@@ -44,6 +71,18 @@ extension WatchConnectivityService: WCSessionDelegate {
         guard let isMetric = applicationContext["isMetric"] as? Bool else { return }
         Task { @MainActor [weak self] in
             self?.isMetric = isMetric
+        }
+    }
+
+    /// Fires once a queued `transferUserInfo` either delivers or permanently fails.
+    /// Only a clean delivery (`error == nil`) removes it from the outbox — a failure
+    /// leaves it queued for the next `flushOutbox()`.
+    nonisolated func session(_ session: WCSession, didFinish userInfoTransfer: WCSessionUserInfoTransfer, error: Error?) {
+        guard error == nil,
+              let idString = userInfoTransfer.userInfo["id"] as? String,
+              let id = UUID(uuidString: idString) else { return }
+        Task { @MainActor [weak self] in
+            self?.markDelivered(id: id)
         }
     }
 }

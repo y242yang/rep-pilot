@@ -6,12 +6,21 @@ enum WatchWorkoutImporter {
     /// Reconstructs a watch-logged workout into the existing SwiftData model graph
     /// (`WorkoutSession` → `WeightExerciseTypeLog` → `SetEntry`) — no new model types.
     @discardableResult
-    static func importPayload(_ payload: WatchWorkoutPayload, context: ModelContext) -> WorkoutSession {
+    static func importPayload(_ payload: WatchWorkoutPayload, context: ModelContext) throws -> WorkoutSession {
+        let watchImportID = payload.id.uuidString
+        let descriptor = FetchDescriptor<WorkoutSession>(
+            predicate: #Predicate { $0.watchImportID == watchImportID }
+        )
+        if let existing = try? context.fetch(descriptor).first {
+            return existing
+        }
+
         let session = WorkoutSession(date: payload.startDate, source: .watch)
         session.endDate = payload.endDate
         session.healthKitWorkoutID = payload.healthKitWorkoutUUID
+        session.watchImportID = watchImportID
 
-        if let activityType = DatabaseSeeder.activityType(named: "Weight Training", context: context) {
+        if let activityType = DatabaseSeeder.activityType(named: payload.activityTypeName, context: context) {
             session.configure(with: activityType)
         }
 
@@ -30,7 +39,7 @@ enum WatchWorkoutImporter {
         }
 
         context.insert(session)
-        try? context.save()
+        try context.save()
         return session
     }
 }

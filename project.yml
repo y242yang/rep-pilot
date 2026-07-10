@@ -108,6 +108,7 @@ targets:
           - UIInterfaceOrientationPortrait
         NSHealthShareUsageDescription: "REPILOT uses HealthKit to record your live workout session on Apple Watch."
         NSHealthUpdateUsageDescription: "REPILOT saves the workout you record on Apple Watch to Apple Health."
+        NSLocationWhenInUseUsageDescription: "REPILOT uses your location to record route, distance, and pace for outdoor workouts like running, walking, cycling, and hiking."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.repilot.rep-pilot.watchkitapp

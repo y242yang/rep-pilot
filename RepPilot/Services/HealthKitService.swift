@@ -21,7 +21,14 @@ final class HealthKitService: ObservableObject {
         HKSeriesType.workoutRoute(),
     ]
 
-    private let writeTypes: Set<HKSampleType> = [HKObjectType.workoutType()]
+    private let writeTypes: Set<HKSampleType> = [
+        HKObjectType.workoutType(),
+        HKObjectType.quantityType(forIdentifier: .heartRate)!,
+        HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
+        HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
+        HKObjectType.quantityType(forIdentifier: .distanceCycling)!,
+        HKSeriesType.workoutRoute(),
+    ]
 
     private init() {}
 

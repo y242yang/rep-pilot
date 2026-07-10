@@ -7,11 +7,16 @@ final class WorkoutSessionManager: NSObject, ObservableObject {
 
     enum State: Equatable {
         case idle
-        case active(startDate: Date)
+        case active(startDate: Date, workoutType: WatchWorkoutType)
         case ended
     }
 
     @Published private(set) var state: State = .idle
+
+    var currentWorkoutType: WatchWorkoutType? {
+        if case .active(_, let workoutType) = state { return workoutType }
+        return nil
+    }
 
     private let store = HKHealthStore()
     private var session: HKWorkoutSession?
@@ -27,14 +32,14 @@ final class WorkoutSessionManager: NSObject, ObservableObject {
     /// `nonisolated` and runs in a detached task specifically to stay off the main
     /// actor no matter what HealthKit does. Recording is best-effort: if it never
     /// finishes, the workout still logs and syncs fine, just without Health data.
-    func startWorkout() {
+    func startWorkout(type: WatchWorkoutType) {
         let startDate = Date()
-        state = .active(startDate: startDate)
+        state = .active(startDate: startDate, workoutType: type)
 
         guard isAvailable else { return }
         let store = self.store
         Task.detached {
-            guard let result = await Self.attachHealthKit(store: store, startDate: startDate) else { return }
+            guard let result = await Self.attachHealthKit(store: store, startDate: startDate, activityType: type.activityType, locationType: type.locationType) else { return }
             await MainActor.run {
                 self.session = result.session
                 self.builder = result.builder
@@ -60,6 +65,31 @@ final class WorkoutSessionManager: NSObject, ObservableObject {
         } ?? nil
     }
 
+    /// Best-effort HealthKit pause/resume — mirrors the display-side pause tracked
+    /// by `ActiveWorkoutView`. If the session hasn't attached yet (see `startWorkout`),
+    /// these are silent no-ops; the on-screen timer pause still works either way.
+    func pauseWorkout() {
+        session?.pause()
+    }
+
+    func resumeWorkout() {
+        session?.resume()
+    }
+
+    /// Cancels the live session and discards the in-progress HealthKit workout
+    /// (never written to Health), for when the user wants to throw the whole
+    /// workout away rather than end and save it.
+    func discardWorkout() async {
+        defer { state = .idle }
+        guard let session, let builder else { return }
+        self.session = nil
+        self.builder = nil
+
+        await withTimeout(seconds: 5) {
+            await Self.discardHealthKit(session: session, builder: builder)
+        }
+    }
+
     func reset() {
         state = .idle
     }
@@ -78,22 +108,34 @@ final class WorkoutSessionManager: NSObject, ObservableObject {
 
     // MARK: - Off-main-actor HealthKit calls
 
-    private nonisolated static func makeConfiguration() -> HKWorkoutConfiguration {
+    private nonisolated static func makeConfiguration(activityType: HKWorkoutActivityType, locationType: HKWorkoutSessionLocationType) -> HKWorkoutConfiguration {
         let config = HKWorkoutConfiguration()
-        config.activityType = .traditionalStrengthTraining
-        config.locationType = .indoor
+        config.activityType = activityType
+        config.locationType = locationType
         return config
     }
 
     private nonisolated static func attachHealthKit(
         store: HKHealthStore,
-        startDate: Date
+        startDate: Date,
+        activityType: HKWorkoutActivityType,
+        locationType: HKWorkoutSessionLocationType
     ) async -> (session: HKWorkoutSession, builder: HKLiveWorkoutBuilder)? {
-        let writeTypes: Set<HKSampleType> = [HKObjectType.workoutType()]
+        // Write access for the underlying quantity/series types too — without it,
+        // HKLiveWorkoutDataSource's live-collected heart rate/energy/distance/route
+        // samples can't actually persist to Health, only the summary HKWorkout can.
+        let writeTypes: Set<HKSampleType> = [
+            HKObjectType.workoutType(),
+            HKObjectType.quantityType(forIdentifier: .heartRate)!,
+            HKObjectType.quantityType(forIdentifier: .activeEnergyBurned)!,
+            HKObjectType.quantityType(forIdentifier: .distanceWalkingRunning)!,
+            HKObjectType.quantityType(forIdentifier: .distanceCycling)!,
+            HKSeriesType.workoutRoute(),
+        ]
         let readTypes: Set<HKObjectType> = [HKObjectType.workoutType()]
         try? await store.requestAuthorization(toShare: writeTypes, read: readTypes)
 
-        let config = makeConfiguration()
+        let config = makeConfiguration(activityType: activityType, locationType: locationType)
         guard let session = try? HKWorkoutSession(healthStore: store, configuration: config) else { return nil }
         let builder = session.associatedWorkoutBuilder()
         builder.dataSource = HKLiveWorkoutDataSource(healthStore: store, workoutConfiguration: config)
@@ -101,6 +143,14 @@ final class WorkoutSessionManager: NSObject, ObservableObject {
         session.startActivity(with: startDate)
         try? await builder.beginCollection(at: startDate)
         return (session, builder)
+    }
+
+    private nonisolated static func discardHealthKit(
+        session: HKWorkoutSession,
+        builder: HKLiveWorkoutBuilder
+    ) async {
+        session.end()
+        builder.discardWorkout()
     }
 
     private nonisolated static func finishHealthKit(

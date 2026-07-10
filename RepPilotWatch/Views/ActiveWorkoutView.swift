@@ -3,12 +3,16 @@ import SwiftUI
 struct ActiveWorkoutView: View {
     @EnvironmentObject private var workoutManager: WorkoutSessionManager
     @EnvironmentObject private var liveState: LiveWorkoutState
-    @EnvironmentObject private var connectivity: WatchConnectivityService
 
     let startDate: Date
     @Binding var path: [WatchRoute]
 
-    @State private var isEnding = false
+    @State private var pausedAt: Date?
+    @State private var totalPausedInterval: TimeInterval = 0
+
+    private var workoutType: WatchWorkoutType {
+        workoutManager.currentWorkoutType ?? .weightTraining
+    }
 
     var body: some View {
         List {
@@ -19,55 +23,62 @@ struct ActiveWorkoutView: View {
                 }
             }
 
-            Section("Exercises") {
-                if liveState.exerciseLogs.isEmpty {
-                    Text("No exercises yet")
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(liveState.exerciseLogs.indices, id: \.self) { idx in
-                    Button {
-                        path.append(.setEntry(idx))
-                    } label: {
-                        VStack(alignment: .leading) {
-                            Text(liveState.exerciseLogs[idx].exerciseTypeName)
-                            Text("\(liveState.exerciseLogs[idx].sets.count) sets")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+            if workoutType.isWeightTraining {
+                Section("Exercises") {
+                    if liveState.exerciseLogs.isEmpty {
+                        Text("No exercises yet")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(liveState.exerciseLogs.indices, id: \.self) { idx in
+                        Button {
+                            Haptics.tap()
+                            path.append(.setEntry(idx))
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(liveState.exerciseLogs[idx].exerciseTypeName)
+                                Text("\(liveState.exerciseLogs[idx].sets.count) sets")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
+                    Button("Add Exercise") {
+                        Haptics.tap()
+                        path.append(.exercisePicker)
+                    }
                 }
-                Button("Add Exercise") { path.append(.exercisePicker) }
             }
 
             Section {
-                Button(isEnding ? "Ending…" : "End Workout", role: .destructive) {
-                    Task { await endWorkout() }
+                Button("Pause") {
+                    Haptics.tap()
+                    workoutManager.pauseWorkout()
+                    path.append(.workoutControls(startDate))
                 }
-                .disabled(isEnding)
+                .foregroundStyle(.white)
+
+                Button("End") {
+                    Haptics.tap()
+                    workoutManager.pauseWorkout()
+                    path.append(.workoutControls(startDate))
+                }
+                .foregroundStyle(.red)
             }
         }
-        .navigationTitle("Workout")
+        .navigationTitle(workoutType.name)
+        .onAppear {
+            guard let pausedAt else { return }
+            totalPausedInterval += Date().timeIntervalSince(pausedAt)
+            self.pausedAt = nil
+        }
+        .onDisappear {
+            pausedAt = Date()
+        }
     }
 
     private func elapsedString(from start: Date, to now: Date) -> String {
-        let total = max(0, Int(now.timeIntervalSince(start)))
+        let total = max(0, Int(now.timeIntervalSince(start)) - Int(totalPausedInterval))
         let h = total / 3600, m = (total % 3600) / 60, s = total % 60
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
-    }
-
-    private func endWorkout() async {
-        isEnding = true
-        defer { isEnding = false }
-
-        let workout = await workoutManager.endWorkout()
-        let payload = liveState.toPayload(
-            startDate: startDate,
-            endDate: Date(),
-            healthKitWorkoutUUID: workout?.uuid.uuidString
-        )
-        connectivity.sendWorkout(payload)
-        liveState.reset()
-        path.removeAll()
-        workoutManager.reset()
     }
 }
