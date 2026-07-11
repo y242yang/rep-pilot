@@ -19,6 +19,9 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.xcarchive
+*.xcresult
+ExportOptions.plist
 
 # Xcode user-specific settings inside xcodeproj/xcworkspace
 *.xcodeproj/xcuserdata/

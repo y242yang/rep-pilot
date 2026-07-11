@@ -50,6 +50,14 @@ final class WatchConnectivityService: NSObject, ObservableObject {
         unsyncedWorkouts.removeAll { $0.id == id }
         WatchOutboxStore.save(unsyncedWorkouts)
     }
+
+    #if DEBUG
+    /// Overrides the unit setting without a real phone connection — used only by
+    /// `DemoTour` for screenshot generation.
+    func debugSetIsMetric(_ value: Bool) {
+        isMetric = value
+    }
+    #endif
 }
 
 extension WatchConnectivityService: WCSessionDelegate {

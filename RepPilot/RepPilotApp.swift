@@ -28,6 +28,9 @@ struct RepPilotApp: App {
                 .preferredColorScheme(.dark)
                 .task {
                     connectivity.configure(modelContext: container.mainContext)
+                    #if DEBUG
+                    DemoDataSeeder.seedIfRequested(context: container.mainContext)
+                    #endif
                 }
         }
         .modelContainer(container)

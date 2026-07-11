@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var workoutManager: WorkoutSessionManager
+    @EnvironmentObject private var liveState: LiveWorkoutState
+    @EnvironmentObject private var connectivity: WatchConnectivityService
     @State private var path: [WatchRoute] = []
 
     var body: some View {
@@ -28,6 +30,11 @@ struct ContentView: View {
                     }
                 }
         }
+        #if DEBUG
+        .task {
+            DemoTour.runIfRequested(path: $path, workoutManager: workoutManager, liveState: liveState, connectivity: connectivity)
+        }
+        #endif
     }
 
     @ViewBuilder

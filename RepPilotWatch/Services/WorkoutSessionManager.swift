@@ -24,6 +24,15 @@ final class WorkoutSessionManager: NSObject, ObservableObject {
 
     var isAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
+    #if DEBUG
+    /// Sets `.active` without touching HealthKit at all — used only by `DemoTour` for
+    /// screenshot generation, where triggering the real HealthKit permission prompt
+    /// would block the screenshot sequence on a system dialog.
+    func debugSetActive(type: WatchWorkoutType) {
+        state = .active(startDate: Date(), workoutType: type)
+    }
+    #endif
+
     /// Transitions to `.active` immediately — the live-logging UI is the core value
     /// here, so it must never block on (or be blocked by) HealthKit. HealthKit's
     /// session calls include synchronous pieces that can stall for a long time,

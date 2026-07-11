@@ -29,6 +29,7 @@
 		405862C5A503FC0B693A97FF /* ActivityType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86793DDCFF0CAD775DF49F2F /* ActivityType.swift */; };
 		4C581B87232258DDBB10A344 /* LogTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A27FDFD9859D5C06A3D9039B /* LogTabView.swift */; };
 		4CC9F67E361FE62A3862FA9A /* WorkoutHealthEnrichment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15F3E1BC5B6FC4C712390CB8 /* WorkoutHealthEnrichment.swift */; };
+		4FF3F895CE7C441738714CDA /* DemoTour.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97927DF0FFA9B9F1BDE8D091 /* DemoTour.swift */; };
 		51E8F58BF3B9CBD493306DAE /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5089ED83FCAEE9F31E22ED1E /* UserProfile.swift */; };
 		5681B4977DFC5F383C99D4C8 /* WorkoutData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D865FE063DA70F41CB75CE84 /* WorkoutData.swift */; };
 		5DDA98A66CFD5E44786FBA57 /* WorkoutTypeCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09BFCFA5D85D508A8AB5C47 /* WorkoutTypeCatalog.swift */; };
@@ -87,6 +88,7 @@
 		E5DC0825CEEDAA6D025F11B9 /* RoutePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F7C92FC600287428725B9D /* RoutePoint.swift */; };
 		E7F58080F05FD10B35237571 /* ActivityProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 413ECC7DE69CD225C2E4981E /* ActivityProgressCard.swift */; };
 		EF320E0F323139EBB3FC530E /* UpcomingSessionRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 092685C082CB3772EA782AFF /* UpcomingSessionRow.swift */; };
+		F07B9DFF1056B2963254FD47 /* DemoDataSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 060E611DE4DDB9B5DC07B760 /* DemoDataSeeder.swift */; };
 		F1B03DFA0AF2288814391859 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F247796B01C72A3C84030F8B /* Extensions.swift */; };
 		F9FE79223610F512ADD4E287 /* SchemaV1.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3F37B46C52A073D1328C5DB /* SchemaV1.swift */; };
 		FB22D2EC4854BF044D889794 /* SetEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8BA087CE2BFB29732B489E /* SetEntryView.swift */; };
@@ -135,6 +137,7 @@
 		00CA03883EE588D90DB2A949 /* RepPilotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepPilotTests.swift; sourceTree = "<group>"; };
 		03567E7F74D5430224BD6B3D /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		06058D5C0AC0BB6D2D3E0310 /* WatchOutboxStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchOutboxStore.swift; sourceTree = "<group>"; };
+		060E611DE4DDB9B5DC07B760 /* DemoDataSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoDataSeeder.swift; sourceTree = "<group>"; };
 		092685C082CB3772EA782AFF /* UpcomingSessionRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingSessionRow.swift; sourceTree = "<group>"; };
 		09959FD27270D15B5951303A /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		0B83F7FB63BC39C2D5265204 /* RepPilotWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepPilotWatchApp.swift; sourceTree = "<group>"; };
@@ -184,6 +187,7 @@
 		905A9245484945A14AD42D9C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		927C12830572307578ADBD1C /* BodyWeightLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyWeightLog.swift; sourceTree = "<group>"; };
 		9552F6BE2D88768BEDB41C98 /* LogWeightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWeightView.swift; sourceTree = "<group>"; };
+		97927DF0FFA9B9F1BDE8D091 /* DemoTour.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoTour.swift; sourceTree = "<group>"; };
 		982ED756AE6AF4C2F2465C80 /* WeightExerciseType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightExerciseType.swift; sourceTree = "<group>"; };
 		989DCA0D3B78E3F7FF5D1AD0 /* DraftModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraftModels.swift; sourceTree = "<group>"; };
 		9CD316184D69B99A2DDD409D /* ProgressDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressDetailView.swift; sourceTree = "<group>"; };
@@ -417,6 +421,7 @@
 			isa = PBXGroup;
 			children = (
 				333EE99ED647BB459C886AD7 /* DatabaseSeeder.swift */,
+				060E611DE4DDB9B5DC07B760 /* DemoDataSeeder.swift */,
 				D049CCB640B13A755D9F20B2 /* HealthKitService.swift */,
 				A0C8CED953BFDCBE247957F8 /* Coaching */,
 				760DEF607C9862DE69E6E512 /* Connectivity */,
@@ -440,6 +445,7 @@
 			children = (
 				E08778DCAFF891BEED030FE5 /* Assets.xcassets */,
 				D195DAEB445D4BBA0A66CD93 /* ContentView.swift */,
+				97927DF0FFA9B9F1BDE8D091 /* DemoTour.swift */,
 				312923FD0AB613020E7A3712 /* Info.plist */,
 				E398C821201C3B1F12412130 /* RepPilotWatch.entitlements */,
 				0B83F7FB63BC39C2D5265204 /* RepPilotWatchApp.swift */,
@@ -604,7 +610,6 @@
 					};
 					827E72708381AB94151286E8 = {
 						DevelopmentTeam = Y2HHD36TDG;
-						ProvisioningStyle = Automatic;
 					};
 					A372DEF3F114A5652278C7FE = {
 						DevelopmentTeam = Y2HHD36TDG;
@@ -667,6 +672,7 @@
 			files = (
 				770ED0695C4378E99205CA11 /* ActiveWorkoutView.swift in Sources */,
 				915358B22B3E04D0AC317138 /* ContentView.swift in Sources */,
+				4FF3F895CE7C441738714CDA /* DemoTour.swift in Sources */,
 				D688EF2D995FB0F02D87AC6C /* ExerciseLibrary.swift in Sources */,
 				66711F1CF8CD2B32EC4AB3BF /* ExercisePickerView.swift in Sources */,
 				007A0F288E905EB05919C999 /* Haptics.swift in Sources */,
@@ -721,6 +727,7 @@
 				B54C5B62A299A0F467C35307 /* ContentView.swift in Sources */,
 				984DB50D8228E93A197F9D09 /* DatabaseSeeder.swift in Sources */,
 				993B5A27A08BA8601BFCB687 /* DayDetailView.swift in Sources */,
+				F07B9DFF1056B2963254FD47 /* DemoDataSeeder.swift in Sources */,
 				8D301882075E6A2EC4C6ECFC /* DraftModels.swift in Sources */,
 				5F401AC06BA8CBCFDC456227 /* EditProfileView.swift in Sources */,
 				1B75FFCC5F443BAE42D9D060 /* EditWorkoutView.swift in Sources */,
@@ -807,10 +814,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = RepPilotWatch/RepPilotWatch.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Apple Distribution: Yiming Yang (Y2HHD36TDG)";
+				CODE_SIGN_STYLE = Manual;
 				INFOPLIST_FILE = RepPilotWatch/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.repilot.rep-pilot.watchkitapp";
+				PROVISIONING_PROFILE_SPECIFIER = "Rep Pilot Watch App Store";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -822,6 +830,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -869,7 +878,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 22;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = Y2HHD36TDG;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -889,7 +898,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 2.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -921,6 +930,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -968,7 +978,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 22;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = Y2HHD36TDG;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -982,7 +992,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 2.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1017,6 +1027,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1034,6 +1045,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
