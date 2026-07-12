@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import CoreGraphics
 
 /// Precomputed, display-ready values for `WorkoutShareCardView` — kept separate from the
 /// view so the SwiftData/ModelContext access needed for PR detection doesn't leak into it.
@@ -16,6 +17,16 @@ struct WorkoutShareCardStats {
     let dateText: String
     let durationValueText: String
     let bottomStats: [BottomStat]
+    /// Exercise names for this session, in logged order, joined for display — nil for
+    /// sessions with no weight-training sets (e.g. a pure cardio run).
+    let exerciseListText: String?
+    /// GPS route, normalized into 0...1 space with longitude compression corrected for
+    /// latitude, so the drawn line isn't skewed. Nil when the session has no route.
+    let routePath: [CGPoint]?
+    /// Reverse-geocoded city/area name for the route, if any. Left nil by `build` and
+    /// filled in afterwards by `WorkoutShareCardExporter` — geocoding is a network call
+    /// and has no place in this otherwise-synchronous stat computation.
+    var placeName: String?
     let prText: String?
 
     @MainActor
@@ -40,13 +51,45 @@ struct WorkoutShareCardStats {
         // via the same dominantWorkoutType logic ActivityType already uses everywhere else.
         bottomStats.append(BottomStat(icon: categoryIcon(session.workoutType), text: categoryLabel(session.workoutType).uppercased()))
 
+        let exerciseListText: String?
+        if session.exerciseLogs.isEmpty {
+            exerciseListText = nil
+        } else {
+            let names = session.exerciseLogs.sorted { $0.date < $1.date }.map(\.exerciseName)
+            exerciseListText = names.joined(separator: " · ")
+        }
+
         return WorkoutShareCardStats(
             title: title,
             dateText: dateText,
             durationValueText: durationValueText,
             bottomStats: bottomStats,
+            exerciseListText: exerciseListText,
+            routePath: normalizedRoutePath(session.workoutData?.routePoints ?? []),
+            placeName: nil,
             prText: detectPR(session: session, isMetric: isMetric, context: context)
         )
+    }
+
+    /// Fits the route's lat/lon bounding box into 0...1 space, correcting longitude for
+    /// compression at this latitude (`cos(latitude)`) so the shape isn't stretched east-west.
+    private static func normalizedRoutePath(_ points: [RoutePoint]) -> [CGPoint]? {
+        guard points.count >= 2 else { return nil }
+        let lats = points.map(\.latitude)
+        let lons = points.map(\.longitude)
+        guard let minLat = lats.min(), let maxLat = lats.max(),
+              let minLon = lons.min(), let maxLon = lons.max() else { return nil }
+
+        let latSpan = max(maxLat - minLat, 0.00001)
+        let latCorrection = cos(((minLat + maxLat) / 2) * .pi / 180)
+        let lonSpan = max((maxLon - minLon) * latCorrection, 0.00001)
+        let span = max(latSpan, lonSpan)
+
+        return points.map { p in
+            let x = (p.longitude - minLon) * latCorrection / span
+            let y = 1 - (p.latitude - minLat) / span // flip: latitude increases north, screen y increases downward
+            return CGPoint(x: x, y: y)
+        }
     }
 
     private static func formattedDuration(_ seconds: TimeInterval) -> String {

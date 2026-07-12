@@ -70,9 +70,8 @@ struct WorkoutDetailView: View {
 
     private func saveShareCard() {
         Task { @MainActor in
-            let stats = WorkoutShareCardStats.build(for: session, isMetric: isMetric, context: modelContext)
             do {
-                try await WorkoutShareCardExporter.saveToPhotos(stats: stats)
+                try await WorkoutShareCardExporter.saveToPhotos(session: session, isMetric: isMetric, context: modelContext)
                 withAnimation { showSavedToast = true }
                 try? await Task.sleep(nanoseconds: 1_600_000_000)
                 withAnimation { showSavedToast = false }

@@ -18,11 +18,17 @@ struct WorkoutShareCardView: View {
         VStack(alignment: .leading, spacing: 0) {
             topRow
             titleBlock
+            if let path = stats.routePath {
+                routeGraphic(path)
+            }
             Spacer(minLength: 0)
             heroBlock
             Spacer(minLength: 0)
             dashedDivider
             statRow
+            if let list = stats.exerciseListText {
+                exerciseListBlock(list)
+            }
             if let pr = stats.prText {
                 prTag(pr)
                     .frame(maxWidth: .infinity)
@@ -78,9 +84,11 @@ struct WorkoutShareCardView: View {
     }
 
     private var heroBlock: some View {
-        VStack(spacing: 4) {
+        // Smaller when a route graphic is also showing — the two share the card's fixed height.
+        let valueSize: CGFloat = stats.routePath != nil ? 40 : 58
+        return VStack(spacing: 4) {
             Text(stats.durationValueText)
-                .font(.system(size: 58, weight: .bold, design: .monospaced))
+                .font(.system(size: valueSize, weight: .bold, design: .monospaced))
                 .foregroundStyle(accent)
                 .lineLimit(1)
                 .minimumScaleFactor(0.5)
@@ -92,6 +100,58 @@ struct WorkoutShareCardView: View {
                 .foregroundStyle(muted)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// GPS route drawn as a glowing path — no map tiles (those aren't reliably loaded in
+    /// time for an off-screen `ImageRenderer` snapshot), just the normalized points with a
+    /// faint reverse-geocoded place name behind it, watermark-style, when one resolved.
+    private func routeGraphic(_ path: [CGPoint]) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 4).fill(accent.opacity(0.05))
+            if let place = stats.placeName {
+                Text(place.uppercased())
+                    .font(.system(size: 22, weight: .heavy))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .padding(.horizontal, 10)
+                    .foregroundStyle(text.opacity(0.07))
+            }
+            GeometryReader { geo in
+                let transform = RouteGeometry.transform(points: path, in: CGRect(origin: .zero, size: geo.size))
+                RoutePath(points: path)
+                    .stroke(accent, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                    .shadow(color: accent.opacity(0.8), radius: 3)
+                    .shadow(color: accent.opacity(0.4), radius: 10)
+                if let first = path.first {
+                    Circle().fill(accent.opacity(0.55)).frame(width: 6, height: 6)
+                        .position(transform(first))
+                }
+                if let last = path.last {
+                    Circle().fill(accent2).frame(width: 7, height: 7)
+                        .position(transform(last))
+                }
+            }
+        }
+        .frame(height: 118)
+        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .padding(.top, 14)
+    }
+
+    private func exerciseListBlock(_ list: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Exercises".uppercased())
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .tracking(2)
+                .foregroundStyle(accent)
+            Text(list)
+                .font(.system(size: 10.5, design: .monospaced))
+                .foregroundStyle(muted)
+                .lineLimit(2)
+                .truncationMode(.tail)
+                .lineSpacing(3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 16)
     }
 
     private var dashedDivider: some View {
@@ -177,6 +237,43 @@ private struct DashedLine: Shape {
     }
 }
 
+/// Shared "aspect-fit and center" math for drawing `WorkoutShareCardStats.routePath`
+/// (already normalized to 0...1) into an arbitrary rect — used by both `RoutePath` (the
+/// line) and the start/end dot placement, which need the identical transform to line up.
+private enum RouteGeometry {
+    static func transform(points: [CGPoint], in rect: CGRect, inset: CGFloat = 0.82) -> (CGPoint) -> CGPoint {
+        let xs = points.map(\.x)
+        let ys = points.map(\.y)
+        let minX = xs.min() ?? 0
+        let maxX = xs.max() ?? 1
+        let minY = ys.min() ?? 0
+        let maxY = ys.max() ?? 1
+        let w = max(maxX - minX, 0.0001)
+        let h = max(maxY - minY, 0.0001)
+        let scale = min(rect.width / w, rect.height / h) * inset
+        let centerX = (minX + maxX) / 2
+        let centerY = (minY + maxY) / 2
+        let offsetX = rect.midX - centerX * scale
+        let offsetY = rect.midY - centerY * scale
+        return { p in CGPoint(x: p.x * scale + offsetX, y: p.y * scale + offsetY) }
+    }
+}
+
+private struct RoutePath: Shape {
+    let points: [CGPoint]
+
+    func path(in rect: CGRect) -> Path {
+        guard points.count >= 2 else { return Path() }
+        let transform = RouteGeometry.transform(points: points, in: rect)
+        var path = Path()
+        for (index, point) in points.enumerated() {
+            let mapped = transform(point)
+            if index == 0 { path.move(to: mapped) } else { path.addLine(to: mapped) }
+        }
+        return path
+    }
+}
+
 private struct GridTexture: Shape {
     var spacing: CGFloat
 
@@ -198,7 +295,7 @@ private struct GridTexture: Shape {
     }
 }
 
-#Preview {
+#Preview("Weight training") {
     WorkoutShareCardView(stats: WorkoutShareCardStats(
         title: "Push Day",
         dateText: "2026.07.11",
@@ -208,6 +305,29 @@ private struct GridTexture: Shape {
             .init(icon: "flame.fill", text: "420 KCAL"),
             .init(icon: "dumbbell.fill", text: "STRENGTH")
         ],
+        exerciseListText: "Bench Press · Incline DB Press · Overhead Press · Lateral Raise · Tricep Pushdown",
+        routePath: nil,
+        placeName: nil,
         prText: "PR · Bench Press 185 lb × 5"
+    ))
+}
+
+#Preview("Run with GPS") {
+    WorkoutShareCardView(stats: WorkoutShareCardStats(
+        title: "Morning Run",
+        dateText: "2026.07.12",
+        durationValueText: "41:07",
+        bottomStats: [
+            .init(icon: "heart.fill", text: "174 BPM"),
+            .init(icon: "flame.fill", text: "410 KCAL"),
+            .init(icon: "figure.run", text: "CARDIO")
+        ],
+        exerciseListText: nil,
+        routePath: (0..<40).map { i -> CGPoint in
+            let t = Double(i) / 39
+            return CGPoint(x: t, y: 0.5 + 0.4 * sin(t * .pi * 2.4))
+        },
+        placeName: "San Francisco",
+        prText: nil
     ))
 }
