@@ -62,6 +62,7 @@ targets:
         NSHealthShareUsageDescription: "REPILOT reads your workout data to sync activities from Apple Health and Apple Watch."
         NSHealthUpdateUsageDescription: "REPILOT saves your workouts to Apple Health."
         NSPhotoLibraryUsageDescription: "REPILOT accesses your photo library to attach activity photos."
+        NSPhotoLibraryAddUsageDescription: "REPILOT saves workout share cards to your photo library."
         NSCameraUsageDescription: "REPILOT uses your camera to capture activity photos."
     settings:
       base:

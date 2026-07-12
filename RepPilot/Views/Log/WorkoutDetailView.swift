@@ -5,7 +5,10 @@ import MapKit
 struct WorkoutDetailView: View {
     let session: WorkoutSession
     @Query private var profiles: [UserProfile]
+    @Environment(\.modelContext) private var modelContext
     @State private var showEdit = false
+    @State private var showSavedToast = false
+    @State private var saveErrorMessage: String?
 
     private var isMetric: Bool { profiles.first?.isMetric ?? true }
     private var data: WorkoutData? { session.workoutData }
@@ -28,10 +31,70 @@ struct WorkoutDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Edit") { showEdit = true }
             }
+            // iOS 26+ merges adjacent .topBarTrailing items into one shared glass
+            // capsule by default — this spacer keeps Edit and Save visually distinct
+            // so they don't read as a single button.
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    saveShareCard()
+                } label: {
+                    Image(systemName: "square.and.arrow.down")
+                }
+                .accessibilityLabel("Save Workout Card to Photos")
+            }
         }
         .sheet(isPresented: $showEdit) {
             EditWorkoutView(session: session)
         }
+        .overlay(alignment: .bottom) {
+            if showSavedToast {
+                savedToast
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .alert("Couldn't Save", isPresented: Binding(
+            get: { saveErrorMessage != nil },
+            set: { if !$0 { saveErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveErrorMessage ?? "")
+        }
+    }
+
+    // MARK: - Share card export
+
+    private func saveShareCard() {
+        Task { @MainActor in
+            let stats = WorkoutShareCardStats.build(for: session, isMetric: isMetric, context: modelContext)
+            do {
+                try await WorkoutShareCardExporter.saveToPhotos(stats: stats)
+                withAnimation { showSavedToast = true }
+                try? await Task.sleep(nanoseconds: 1_600_000_000)
+                withAnimation { showSavedToast = false }
+            } catch WorkoutShareCardExporter.SaveError.notAuthorized {
+                saveErrorMessage = "Allow photo access in Settings to save workout cards."
+            } catch {
+                saveErrorMessage = "Something went wrong saving this card. Try again."
+            }
+        }
+    }
+
+    private var savedToast: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+            Text("Saved to Photos")
+                .font(.subheadline.bold())
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.black.opacity(0.85), in: Capsule())
     }
 
     // MARK: - Header

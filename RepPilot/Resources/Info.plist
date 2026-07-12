@@ -28,6 +28,8 @@
 	<string>REPILOT reads your workout data to sync activities from Apple Health and Apple Watch.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>REPILOT saves your workouts to Apple Health.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>REPILOT saves workout share cards to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>REPILOT accesses your photo library to attach activity photos.</string>
 	<key>UILaunchScreen</key>
